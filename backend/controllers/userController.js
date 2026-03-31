@@ -62,8 +62,6 @@ export const createUser = async (req, res) => {
       .upsert({
         id: data.user.id,
         email: data.user.email,
-        full_name: full_name || null,
-        status: status || 'active',
         role,
         branch_id: branch_id || null,
         created_at: new Date().toISOString()
@@ -106,8 +104,6 @@ export const getUsers = async (req, res) => {
       .select(`
         id,
         email,
-        full_name,
-        status,
         role,
         branch_id,
         created_at
@@ -116,7 +112,7 @@ export const getUsers = async (req, res) => {
 
     if (error) {
       console.error('Get users error:', error)
-      return res.status(500).json({ error: 'Failed to fetch users' })
+      return res.status(500).json({ error: error.message || 'Failed to fetch users', details: error })
     }
 
     res.json({ users: data })
