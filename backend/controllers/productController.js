@@ -23,7 +23,7 @@ export const getProducts = async (req, res) => {
 export const createProduct = async (req, res) => {
   try {
     const supabase = getSupabaseAdmin()
-    const { name, description, price, stock, category } = req.body;
+    const { name, description, price, stock, category, unit } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
       return res.status(400).json({ error: 'Name, price, and stock are required' });
@@ -31,7 +31,7 @@ export const createProduct = async (req, res) => {
 
     const { data: product, error } = await supabase
       .from('products')
-      .insert([{ name, description, price, stock, category }])
+      .insert([{ name, description, price, stock, category, unit: unit || 'unit' }])
       .select()
       .single();
 
@@ -44,5 +44,56 @@ export const createProduct = async (req, res) => {
   } catch (error) {
     console.error('Server error creating product:', error);
     res.status(500).json({ error: 'Server error creating product' });
+  }
+};
+
+export const updateProduct = async (req, res) => {
+  try {
+    const supabase = getSupabaseAdmin()
+    const { id } = req.params;
+    const { name, description, price, stock, category, unit } = req.body;
+
+    if (!name || price === undefined || stock === undefined) {
+      return res.status(400).json({ error: 'Name, price, and stock are required' });
+    }
+
+    const { data: product, error } = await supabase
+      .from('products')
+      .update({ name, description, price, stock, category, unit })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating product:', error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.json({ message: 'Product updated successfully', product });
+  } catch (error) {
+    console.error('Server error updating product:', error);
+    res.status(500).json({ error: 'Server error updating product' });
+  }
+};
+
+export const deleteProduct = async (req, res) => {
+  try {
+    const supabase = getSupabaseAdmin()
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting product:', error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.json({ message: 'Product deleted successfully' });
+  } catch (error) {
+    console.error('Server error deleting product:', error);
+    res.status(500).json({ error: 'Server error deleting product' });
   }
 };

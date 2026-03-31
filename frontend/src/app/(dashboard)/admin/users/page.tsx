@@ -57,7 +57,7 @@ function useDebounce<T>(value: T, delay: number): T {
 const fetchUsers = async (): Promise<User[]> => {
   console.log('[fetchUsers] Initiating user fetch...');
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  
+
   console.log('[fetchUsers] Session status:', session ? 'Found' : 'Not found');
   if (!session || sessionError) {
     console.warn('[fetchUsers] User not authenticated or session error:', sessionError);
@@ -92,7 +92,7 @@ const fetchUsers = async (): Promise<User[]> => {
 // --- Main Page Component ---
 export default function UserManagementPage() {
   const queryClient = useQueryClient();
-  
+
   // State
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
@@ -101,7 +101,7 @@ export default function UserManagementPage() {
   const [sortField, setSortField] = useState<keyof User>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
@@ -129,7 +129,7 @@ export default function UserManagementPage() {
       const { data: { session } } = await supabase.auth.getSession();
       const method = payload.id ? 'PUT' : 'POST';
       const url = payload.id ? `http://localhost:9000/api/users/${payload.id}` : 'http://localhost:9000/api/users';
-      
+
       const res = await fetch(url, {
         method,
         headers: {
@@ -226,8 +226,8 @@ export default function UserManagementPage() {
   // Filter & Sort
   const filteredUsers = useMemo(() => {
     return users.filter(u => {
-      const matchSearch = debouncedSearch.toLowerCase() === '' || 
-        u.full_name?.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
+      const matchSearch = debouncedSearch.toLowerCase() === '' ||
+        u.full_name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
         u.email.toLowerCase().includes(debouncedSearch.toLowerCase());
       const matchRole = roleFilter === 'all' || u.role === roleFilter;
       const matchStatus = statusFilter === 'all' || u.status === statusFilter;
@@ -263,7 +263,7 @@ export default function UserManagementPage() {
 
   // Helpers
   const getRoleColor = (role: string) => {
-    switch(role) {
+    switch (role) {
       case 'admin': return 'bg-purple-100 text-purple-700 border-purple-200';
       case 'main_manager': return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'branch_manager': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
@@ -272,13 +272,16 @@ export default function UserManagementPage() {
   };
 
   const getInitials = (name: string, email: string) => {
-    if (name) return name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
-    return email.substring(0,2).toUpperCase();
+    if (name) return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    return email.substring(0, 2).toUpperCase();
   };
 
+  const activeCount = users.filter(u => u.status === 'active').length;
+
   return (
+<<<<<<< HEAD
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100 gap-4">
         <div>
@@ -300,9 +303,9 @@ export default function UserManagementPage() {
         <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-wrap gap-4 items-center">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
+            <input
               value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search by name or email..." 
+              placeholder="Search by name or email..."
               className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
             />
           </div>
@@ -351,14 +354,14 @@ export default function UserManagementPage() {
                   <input type="checkbox" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" checked={isAllSelected} onChange={toggleSelectAll} />
                 </th>
                 <th className="px-4 py-4 cursor-pointer hover:text-slate-800 transition-colors" onClick={() => toggleSort('full_name')}>
-                  <div className="flex items-center gap-1">User <ArrowUpDown className="w-3 h-3"/></div>
+                  <div className="flex items-center gap-1">User <ArrowUpDown className="w-3 h-3" /></div>
                 </th>
                 <th className="px-4 py-4 cursor-pointer hover:text-slate-800 transition-colors" onClick={() => toggleSort('role')}>
-                  <div className="flex items-center gap-1">Role <ArrowUpDown className="w-3 h-3"/></div>
+                  <div className="flex items-center gap-1">Role <ArrowUpDown className="w-3 h-3" /></div>
                 </th>
                 <th className="px-4 py-4">Branch</th>
                 <th className="px-4 py-4 cursor-pointer hover:text-slate-800 transition-colors" onClick={() => toggleSort('last_login')}>
-                  <div className="flex items-center gap-1">Last Login <ArrowUpDown className="w-3 h-3"/></div>
+                  <div className="flex items-center gap-1">Last Login <ArrowUpDown className="w-3 h-3" /></div>
                 </th>
                 <th className="px-4 py-4">Status</th>
                 <th className="pr-6 pl-4 py-4 text-right">Actions</th>
@@ -366,15 +369,15 @@ export default function UserManagementPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
-                Array.from({length: 5}).map((_, i) => (
+                Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse bg-white">
                     <td className="pl-6 pr-3 py-4"><div className="w-4 h-4 bg-slate-200 rounded"></div></td>
-                    <td className="px-4 py-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-slate-200"/><div className="space-y-2"><div className="w-24 h-4 bg-slate-200 rounded"/><div className="w-32 h-3 bg-slate-100 rounded"/></div></div></td>
-                    <td className="px-4 py-4"><div className="w-20 h-6 bg-slate-200 rounded-full"/></td>
-                    <td className="px-4 py-4"><div className="w-24 h-4 bg-slate-200 rounded"/></td>
-                    <td className="px-4 py-4"><div className="w-24 h-4 bg-slate-200 rounded"/></td>
-                    <td className="px-4 py-4"><div className="w-12 h-6 bg-slate-200 rounded-full"/></td>
-                    <td className="pr-6 pl-4 py-4 text-right"><div className="w-8 h-8 bg-slate-200 rounded-lg ml-auto"/></td>
+                    <td className="px-4 py-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-slate-200" /><div className="space-y-2"><div className="w-24 h-4 bg-slate-200 rounded" /><div className="w-32 h-3 bg-slate-100 rounded" /></div></div></td>
+                    <td className="px-4 py-4"><div className="w-20 h-6 bg-slate-200 rounded-full" /></td>
+                    <td className="px-4 py-4"><div className="w-24 h-4 bg-slate-200 rounded" /></td>
+                    <td className="px-4 py-4"><div className="w-24 h-4 bg-slate-200 rounded" /></td>
+                    <td className="px-4 py-4"><div className="w-12 h-6 bg-slate-200 rounded-full" /></td>
+                    <td className="pr-6 pl-4 py-4 text-right"><div className="w-8 h-8 bg-slate-200 rounded-lg ml-auto" /></td>
                   </tr>
                 ))
               ) : isError ? (
@@ -384,7 +387,7 @@ export default function UserManagementPage() {
                       <Shield className="w-10 h-10 text-rose-300 mb-3" />
                       <p className="text-lg font-medium text-rose-900">Failed to load users</p>
                       <p className="text-sm mt-1 mb-4">{error instanceof Error ? error.message : 'An unknown error occurred while fetching user data.'}</p>
-                      <Button onClick={() => queryClient.invalidateQueries({queryKey: ['users']})} variant="secondary" className="border-rose-200 text-rose-700 hover:bg-rose-50 border bg-transparent">Try Again</Button>
+                      <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['users'] })} variant="secondary" className="border-rose-200 text-rose-700 hover:bg-rose-50 border bg-transparent">Try Again</Button>
                     </div>
                   </td>
                 </tr>
@@ -433,7 +436,7 @@ export default function UserManagementPage() {
                     </td>
                     <td className="px-4 py-4 text-slate-600">
                       {u.last_login ? (
-                        <div className="flex flex-col" title={formatDistanceToNow(new Date(u.last_login), {addSuffix: true})}>
+                        <div className="flex flex-col" title={formatDistanceToNow(new Date(u.last_login), { addSuffix: true })}>
                           <span>{format(new Date(u.last_login), 'MMM dd, hh:mm a')}</span>
                         </div>
                       ) : (
@@ -441,7 +444,7 @@ export default function UserManagementPage() {
                       )}
                     </td>
                     <td className="px-4 py-4">
-                      <button 
+                      <button
                         onClick={() => toggleStatusMut.mutate({ id: u.id, status: u.status === 'active' ? 'inactive' : 'active' })}
                         className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200 ease-in-out ${u.status === 'active' ? 'bg-emerald-500' : 'bg-slate-300'}`}
                         role="switch" aria-checked={u.status === 'active'}
@@ -478,7 +481,7 @@ export default function UserManagementPage() {
             <Input label="Full Name" {...register('full_name')} className={`rounded-xl ${errors.full_name ? 'border-rose-300 focus:ring-rose-500' : ''}`} placeholder="John Doe" />
             {errors.full_name && <p className="text-xs text-rose-500">{errors.full_name.message}</p>}
           </div>
-          
+
           <div className="space-y-1">
             <Input label="Email Address" type="email" {...register('email')} className={`rounded-xl ${errors.email ? 'border-rose-300 focus:ring-rose-500' : ''}`} placeholder="john@example.com" disabled={isEditing} />
             {errors.email && <p className="text-xs text-rose-500">{errors.email.message}</p>}
@@ -487,7 +490,7 @@ export default function UserManagementPage() {
           {!isEditing && (
             <div className="space-y-1">
               <Input label="Password" type="password" {...register('password')} className="rounded-xl" placeholder="Leave blank to auto-generate" />
-              <p className="text-xs text-slate-500 flex items-center gap-1"><Shield className="w-3 h-3"/> Minimum 8 characters recommended</p>
+              <p className="text-xs text-slate-500 flex items-center gap-1"><Shield className="w-3 h-3" /> Minimum 8 characters recommended</p>
             </div>
           )}
 
@@ -495,69 +498,155 @@ export default function UserManagementPage() {
             <div className="space-y-1">
               <label className="text-sm font-medium text-slate-700">System Role</label>
               <select {...register('role')} className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
-                <option value="branch_manager">Branch Manager</option>
-                <option value="main_manager">Main Manager</option>
-                <option value="admin">System Admin</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-slate-700">Status</label>
-              <select {...register('status')} className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
+=======
+    <div className="space-y-8 pb-10">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <div>
+                      <h1 className="text-3xl font-bold tracking-tight text-slate-900">User Management</h1>
+                      <p className="text-slate-500 mt-1 font-medium">{users.length} total users — {activeCount} active status</p>
+                    </div>
+                    <Button onClick={() => { setIsModalOpen(true); setMessage(null); }} variant="secondary" className="rounded-xl px-6 h-12 shadow-sm">
+                      + Add User
+                    </Button>
+                  </div>
 
-          {selectedRole === 'branch_manager' && (
-            <div className="space-y-1">
-              <Input label="Assigned Branch ID" {...register('branch_id')} className="rounded-xl" placeholder="branch_uuid_here" />
-            </div>
-          )}
+                  <Card className="rounded-3xl shadow-sm border border-slate-100 bg-white">
+                    <div className="overflow-x-auto">
+                      {loading ? (
+                        <div className="text-sm text-slate-500 p-12 text-center animate-pulse">Loading users...</div>
+                      ) : users.length === 0 ? (
+                        <div className="text-center p-12">
+                          <p className="text-slate-500">No users found.</p>
+                        </div>
+                      ) : (
+                        <table className="w-full text-sm text-left whitespace-nowrap">
+                          <thead className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+                            <tr>
+                              <th className="px-6 py-5 rounded-tl-3xl">Account Email</th>
+                              <th className="px-6 py-5">Full Name</th>
+                              <th className="px-6 py-5">Status</th>
+                              <th className="px-6 py-5">Role Assigned</th>
+                              <th className="px-6 py-5">Branch ID</th>
+                              <th className="px-6 py-5 text-right rounded-tr-3xl">Join Date</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {users.map((u) => (
+                              <tr key={u.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                                <td className="px-6 py-5 font-bold text-slate-900">{u.email}</td>
+                                <td className="px-6 py-5 text-slate-600 font-medium">{u.full_name || '-'}</td>
+                                <td className="px-6 py-5">
+                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium tracking-wide border ${u.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                                    {u.status || 'active'}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-5 uppercase text-[10px] font-bold tracking-wider">
+                                  <span className={`px-2.5 py-1 rounded-full border ${u.role === 'admin' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                    u.role === 'main_manager' ? 'bg-sky-50 text-sky-700 border-sky-200' :
+                                      'bg-slate-100 text-slate-700 border-slate-200'
+                                    }`}>
+                                    {u.role.replace('_', ' ')}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-5 text-slate-500">{u.branch_id || '-'}</td>
+                                <td className="px-6 py-5 text-slate-500 font-medium text-right">{new Date(u.created_at).toLocaleDateString()}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  </Card>
 
-          <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-6">
-            <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="rounded-xl h-10 px-4">Cancel</Button>
-            <Button type="submit" disabled={saveUserMut.isPending} className="rounded-xl h-10 px-6 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
-              {saveUserMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (isEditing ? 'Save Changes' : 'Create User')}
-            </Button>
-          </div>
-        </form>
-      </Modal>
+                  <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Register New User">
+                    <form onSubmit={handleCreateUser} className="space-y-4 pt-2">
+                      {message && <div className={`p-3 rounded-xl text-sm ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{message.text}</div>}
+                      <Input label="Email Address" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="rounded-xl" />
+                      <Input label="Full Name" type="text" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} className="rounded-xl" />
+                      <Input label="Temporary Password" type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Leave blank for TempPass123!" className="rounded-xl" />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-col space-y-1">
+                          <label className="text-sm font-medium text-slate-700 mb-1">System Role</label>
+                          <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="flex h-12 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-medium">
+>>>>>>> a3ffe82c7f70b3071480add5c9a34adc7f689f6e
+                            <option value="branch_manager">Branch Manager</option>
+                            <option value="main_manager">Main Manager</option>
+                            <option value="admin">System Admin</option>
+                          </select>
+                        </div>
+<<<<<<< HEAD
+  <div className="space-y-1">
+    <label className="text-sm font-medium text-slate-700">Status</label>
+    <select {...register('status')} className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+=======
+            <div className="flex flex-col space-y-1">
+        <label className="text-sm font-medium text-slate-700 mb-1">Status</label>
+        <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="flex h-12 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-medium">
+>>>>>>> a3ffe82c7f70b3071480add5c9a34adc7f689f6e
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+  </div>
 
-      {/* Delete Confirmation Modal */}
-      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Delete User">
-        <div className="space-y-4">
-          <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 flex items-start gap-3 text-rose-800">
-            <Trash2 className="w-5 h-5 shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <p className="font-bold mb-1">Warning: Irreversible Action</p>
-              <p>You are about to permanently delete the user <strong>{userToDelete?.full_name}</strong> ({userToDelete?.email}). This action cannot be undone.</p>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">
-              Type <span className="font-mono font-bold select-all bg-slate-100 px-1 rounded">{userToDelete?.email}</span> to confirm:
-            </label>
-            <Input 
-              value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)}
-              className="rounded-xl focus:ring-rose-500/20 focus:border-rose-500" placeholder={userToDelete?.email}
-            />
-          </div>
+  {
+    selectedRole === 'branch_manager' && (
+      <div className="space-y-1">
+        <Input label="Assigned Branch ID" {...register('branch_id')} className="rounded-xl" placeholder="branch_uuid_here" />
+      </div>
+    )
+  }
+<<<<<<< HEAD
 
-          <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-6">
-            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)} className="rounded-xl h-10 px-4">Cancel</Button>
-            <Button 
-              disabled={deleteConfirmText !== userToDelete?.email || deleteUserMut.isPending} 
-              onClick={() => userToDelete && deleteUserMut.mutate(userToDelete.id)} 
-              className="rounded-xl h-10 px-6 bg-rose-600 hover:bg-rose-700 text-white shadow-sm disabled:opacity-50"
-            >
-              {deleteUserMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Permanently Delete'}
-            </Button>
-          </div>
-        </div>
-      </Modal>
+  <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-6">
+    <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="rounded-xl h-10 px-4">Cancel</Button>
+    <Button type="submit" disabled={saveUserMut.isPending} className="rounded-xl h-10 px-6 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
+      {saveUserMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (isEditing ? 'Save Changes' : 'Create User')}
+    </Button>
+  </div>
+=======
+          <Button type="submit" disabled={submitLoading} className="w-full mt-8 h-12 rounded-xl shadow-sm text-sm font-bold border-0" variant="secondary">
+            {submitLoading ? 'Registering...' : 'Create Account'}
+          </Button>
+>>>>>>> a3ffe82c7f70b3071480add5c9a34adc7f689f6e
+        </form >
+      </Modal >
 
+    {/* Delete Confirmation Modal */ }
+    < Modal isOpen = { isDeleteModalOpen } onClose = {() => setIsDeleteModalOpen(false)
+} title = "Delete User" >
+  <div className="space-y-4">
+    <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 flex items-start gap-3 text-rose-800">
+      <Trash2 className="w-5 h-5 shrink-0 mt-0.5" />
+      <div className="text-sm">
+        <p className="font-bold mb-1">Warning: Irreversible Action</p>
+        <p>You are about to permanently delete the user <strong>{userToDelete?.full_name}</strong> ({userToDelete?.email}). This action cannot be undone.</p>
+      </div>
     </div>
+
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-slate-700">
+        Type <span className="font-mono font-bold select-all bg-slate-100 px-1 rounded">{userToDelete?.email}</span> to confirm:
+      </label>
+      <Input
+        value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)}
+        className="rounded-xl focus:ring-rose-500/20 focus:border-rose-500" placeholder={userToDelete?.email}
+      />
+    </div>
+
+    <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-6">
+      <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)} className="rounded-xl h-10 px-4">Cancel</Button>
+      <Button
+        disabled={deleteConfirmText !== userToDelete?.email || deleteUserMut.isPending}
+        onClick={() => userToDelete && deleteUserMut.mutate(userToDelete.id)}
+        className="rounded-xl h-10 px-6 bg-rose-600 hover:bg-rose-700 text-white shadow-sm disabled:opacity-50"
+      >
+        {deleteUserMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Permanently Delete'}
+      </Button>
+    </div>
+  </div>
+      </Modal >
+
+    </div >
   );
 }
