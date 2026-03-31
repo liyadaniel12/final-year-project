@@ -9,7 +9,7 @@ export const createUser = async (req, res) => {
   try {
     console.log('Creating user with data:', { email: req.body.email, role: req.body.role, createdBy: req.user.id })
 
-    const { email, role, branch_id, password } = req.body
+    const { email, role, branch_id, password, full_name, status } = req.body
 
     const assignedPassword = password || DEFAULT_PASSWORD
 
@@ -62,6 +62,8 @@ export const createUser = async (req, res) => {
       .upsert({
         id: data.user.id,
         email: data.user.email,
+        full_name: full_name || null,
+        status: status || 'active',
         role,
         branch_id: branch_id || null,
         created_at: new Date().toISOString()
@@ -81,6 +83,8 @@ export const createUser = async (req, res) => {
       user: {
         id: data.user.id,
         email: data.user.email,
+        full_name,
+        status,
         role,
         branch_id,
         assignedPassword
@@ -102,6 +106,8 @@ export const getUsers = async (req, res) => {
       .select(`
         id,
         email,
+        full_name,
+        status,
         role,
         branch_id,
         created_at

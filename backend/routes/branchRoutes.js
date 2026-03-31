@@ -1,0 +1,14 @@
+import express from 'express';
+import { getBranches, createBranch } from '../controllers/branchController.js';
+import { authenticateAdmin } from '../middleware/auth.js';
+
+const router = express.Router();
+
+// Allow all authenticated users to get branches (or change to authenticateAdmin if strictly admin only)
+// Based on typical use cases, getting branches might be used by multiple roles implicitly.
+router.get('/', getBranches);
+
+// Only admins can create a new branch
+router.post('/', authenticateAdmin, createBranch);
+
+export default router;

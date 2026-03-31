@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../providers/AuthProvider';
-import { LayoutDashboard, Users, LogOut, Package, Store } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Package, Store, FileText, Component, AlertTriangle, MessageSquare, ArrowRightLeft, LineChart } from 'lucide-react';
 import { cn } from '../ui/Button';
 
 export function Sidebar() {
@@ -17,13 +17,20 @@ export function Sidebar() {
     switch (user.role) {
       case 'admin':
         return [
-          { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-          { href: '/admin/users', label: 'Users', icon: Users },
+          { href: '/admin', label: 'Overview', icon: LayoutDashboard },
+          { href: '/admin/users', label: 'User Management', icon: Users },
+          { href: '/admin/branches', label: 'Branch Management', icon: Store },
+          { href: '/admin/products', label: 'Product Management', icon: Package },
         ];
       case 'main_manager':
         return [
-          { href: '/manager', label: 'Dashboard', icon: LayoutDashboard },
-          { href: '/manager/stock', label: 'Stock', icon: Package },
+          { href: '/manager', label: 'Overview', icon: LayoutDashboard },
+          { href: '/manager/stock', label: 'Stock Overview', icon: Package },
+          { href: '/manager/sales', label: 'Sales Records', icon: LineChart },
+          { href: '/manager/expiry', label: 'Expiry Analysis', icon: AlertTriangle },
+          { href: '/manager/redistribution', label: 'Redistribution', icon: ArrowRightLeft },
+          { href: '/manager/feedback', label: 'Customer Feedback', icon: MessageSquare },
+          { href: '/manager/reports', label: 'Generate Reports', icon: FileText },
         ];
       case 'branch_manager':
         return [

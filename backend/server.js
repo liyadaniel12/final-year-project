@@ -5,6 +5,9 @@ dotenv.config()
 import express from 'express'
 import cors from 'cors'
 import userRoutes from './routes/userRoutes.js'
+import branchRoutes from './routes/branchRoutes.js'
+import productRoutes from './routes/productRoutes.js'
+import systemRoutes from './routes/systemRoutes.js'
 
 const app = express()
 
@@ -18,6 +21,9 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api/users', userRoutes)
+app.use('/api/branches', branchRoutes)
+app.use('/api/products', productRoutes)
+app.use('/api/system', systemRoutes)
 
 const PORT = process.env.PORT || 9000
 

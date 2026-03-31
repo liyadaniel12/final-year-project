@@ -62,3 +62,36 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
 CREATE INDEX IF NOT EXISTS profiles_role_idx ON profiles(role);
 CREATE INDEX IF NOT EXISTS profiles_branch_id_idx ON profiles(branch_id);
 CREATE INDEX IF NOT EXISTS profiles_created_by_idx ON profiles(created_by);
+
+-- Create branches table
+CREATE TABLE IF NOT EXISTS branches (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  location TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS for branches
+ALTER TABLE branches ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view branches" ON branches FOR SELECT USING (true);
+CREATE POLICY "Admins can insert branches" ON branches FOR INSERT WITH CHECK (get_user_role(auth.uid()) = 'admin');
+CREATE POLICY "Admins can update branches" ON branches FOR UPDATE USING (get_user_role(auth.uid()) = 'admin');
+CREATE POLICY "Admins can delete branches" ON branches FOR DELETE USING (get_user_role(auth.uid()) = 'admin');
+
+-- Create products table
+CREATE TABLE IF NOT EXISTS products (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+  stock INTEGER NOT NULL DEFAULT 0,
+  category TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS for products
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view products" ON products FOR SELECT USING (true);
+CREATE POLICY "Admins can insert products" ON products FOR INSERT WITH CHECK (get_user_role(auth.uid()) = 'admin');
+CREATE POLICY "Admins can update products" ON products FOR UPDATE USING (get_user_role(auth.uid()) = 'admin');
+CREATE POLICY "Admins can delete products" ON products FOR DELETE USING (get_user_role(auth.uid()) = 'admin');
