@@ -24,9 +24,8 @@ export function Sidebar() {
         ];
       case 'main_manager':
         return [
-          { href: '/manager', label: 'Overview', icon: LayoutDashboard },
+          { href: '/manager', label: 'Dashboard', icon: LayoutDashboard },
           { href: '/manager/stock', label: 'Stock Overview', icon: Package },
-          { href: '/manager/sales', label: 'Sales Records', icon: LineChart },
           { href: '/manager/expiry', label: 'Expiry Analysis', icon: AlertTriangle },
           { href: '/manager/redistribution', label: 'Redistribution', icon: ArrowRightLeft },
           { href: '/manager/feedback', label: 'Customer Feedback', icon: MessageSquare },
@@ -34,7 +33,11 @@ export function Sidebar() {
         ];
       case 'branch_manager':
         return [
-          { href: '/branch', label: 'Branch Dashboard', icon: Store },
+          { href: '/branch', label: 'Dashboard', icon: LayoutDashboard },
+          { href: '/branch/stock', label: 'Stock', icon: Package },
+          { href: '/branch/sales', label: 'Sales', icon: LineChart },
+          { href: '/branch/expiry', label: 'Expiry', icon: AlertTriangle },
+          { href: '/branch/transfer', label: 'Transfer', icon: ArrowRightLeft },
         ];
       default:
         return [];
