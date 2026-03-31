@@ -1,0 +1,78 @@
+### Admin Login
+POST http://localhost:9000/api/users/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "admin123"
+}
+
+### Manager Login (Testing unified login)
+POST http://localhost:9000/api/users/login
+Content-Type: application/json
+
+{
+  "email": "manager@example.com",
+  "password": "myCustomPassword123"
+}
+
+### Change Password (For first time login)
+PUT http://localhost:9000/api/users/change-password
+Content-Type: application/json
+
+{
+  "email": "manager@example.com",
+  "currentPassword": "myCustomPassword123",
+  "newPassword": "secureNewPassword456"
+}
+
+### Create Main Manager (requires admin token in Authorization header)
+POST http://localhost:9000/api/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMzVhMzYwYS1hZTViLTRmYzUtOGEyMi01ZTc4Y2NmYTU3NDEiLCJlbWFpbCI6ImxpeWFkYW5pZWxAZ21haWwuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzc0OTM2NTUyLCJleHAiOjE3NzUwMjI5NTJ9.ZXFjU2FaZnpCYnZZd2hkV24wMDlhZXZOVzlWTjRqWmEyaXZpdnVSd0crdz0
+
+{
+  "email": "manager@example.com",
+  "role": "main_manager",
+  "branch_id": null,
+  "password": "myCustomPassword123"
+}
+
+### Create Branch Manager (requires admin token in Authorization header)
+POST http://localhost:9000/api/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIwMzVhMzYwYS1hZTViLTRmYzUtOGEyMi01ZTc4Y2NmYTU3NDEiLCJlbWFpbCI6ImxpeWFkYW5pZWxAZ21haWwuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzc0OTM2NTUyLCJleHAiOjE3NzUwMjI5NTJ9.ZXFjU2FaZnpCYnZZd2hkV24wMDlhZXZOVzlWTjRqWmEyaXZpdnVSd0crdz0
+
+{
+  "email": "branchmanager@example.com",
+  "role": "branch_manager",
+  "branch_id": null
+}
+
+### Create Another Admin (requires admin token in Authorization header)
+POST http://localhost:9000/api/users
+Content-Type: application/json
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN
+
+{
+  "email": "admin2@example.com",
+  "role": "admin",
+  "branch_id": null
+}
+
+### Get All Users (requires admin token in Authorization header)
+GET http://localhost:9000/api/users
+Authorization: Bearer YOUR_ADMIN_JWT_TOKEN
+
+### Health Check
+GET http://localhost:9000/health
+
+### Old Test (for reference)
+# POST http://localhost:3002/api/users
+# Content-Type: application/json
+#
+# {
+#   "email": "liyadaniel@gmail.com",
+#   "password": "password123",
+#   "role": "admin"
+# }

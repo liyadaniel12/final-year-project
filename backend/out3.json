@@ -1,0 +1,14 @@
+{
+  "authData": {
+    "user": null,
+    "session": null
+  },
+  "authError": {
+    "__isAuthError": true,
+    "name": "AuthApiError",
+    "status": 400,
+    "code": "invalid_credentials"
+  },
+  "profile": null,
+  "profileError": null
+}

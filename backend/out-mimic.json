@@ -1,0 +1,11 @@
+{
+  "error": null,
+  "userId": "035a360a-ae5b-4fc5-8a22-5e78ccfa5741",
+  "profile": null,
+  "profileError": {
+    "code": "42P17",
+    "details": null,
+    "hint": null,
+    "message": "infinite recursion detected in policy for relation \"profiles\""
+  }
+}
