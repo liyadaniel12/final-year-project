@@ -334,8 +334,8 @@ export default function UserManagementPage() {
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="bg-indigo-50 border-b border-indigo-100 px-4 py-3 flex items-center justify-between">
               <span className="text-sm font-medium text-indigo-800">{selectedUsers.size} users selected</span>
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="secondary" className="h-8 text-xs rounded-lg border-indigo-200 text-indigo-700 hover:bg-indigo-100" onClick={() => handleBulkAction('activate')}>Activate</Button>
-                <Button size="sm" variant="secondary" className="h-8 text-xs rounded-lg border-indigo-200 text-indigo-700 hover:bg-indigo-100" onClick={() => handleBulkAction('deactivate')}>Deactivate</Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs rounded-lg border-indigo-200 text-indigo-700 hover:bg-indigo-100" onClick={() => handleBulkAction('activate')}>Activate</Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs rounded-lg border-indigo-200 text-indigo-700 hover:bg-indigo-100" onClick={() => handleBulkAction('deactivate')}>Deactivate</Button>
                 <Button size="sm" variant="danger" className="h-8 text-xs rounded-lg bg-rose-500 hover:bg-rose-600 border-none" onClick={() => handleBulkAction('delete')}>
                   <Trash2 className="w-3 h-3 mr-1" /> Delete
                 </Button>
@@ -502,41 +502,65 @@ export default function UserManagementPage() {
                 <option value="admin">System Admin</option>
               </select>
             </div>
+<<<<<<< HEAD
 
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-slate-700">Status</label>
-              <select {...register('status')} className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
+=======
+>>>>>>> 8d868895102b328d8361511d91ada1d55be989cb
+  <div className="space-y-1">
+    <label className="text-sm font-medium text-slate-700">Status</label>
+    <select {...register('status')} className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+  </div>
+          </div >
+<<<<<<< HEAD
+
+    { selectedRole === 'branch_manager' && (
+      <div className="space-y-1">
+        <Input label="Assigned Branch ID" {...register('branch_id')} className="rounded-xl" placeholder="branch_uuid_here" />
+      </div>
+    )
+}
+
+<div className="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-6">
+  <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl h-10 px-4 focus:ring-slate-500 text-slate-700 bg-white border border-slate-200">Cancel</Button>
+  <Button type="submit" disabled={saveUserMut.isPending} className="rounded-xl h-10 px-6 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
+    {saveUserMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (isEditing ? 'Save Changes' : 'Create User')}
+  </Button>
+</div>
+        </form >
+      </Modal >
+
+  {/* Delete Confirmation Modal */ }
+  < Modal isOpen = { isDeleteModalOpen } onClose = {() => setIsDeleteModalOpen(false)} title = "Delete User" >
+    <div className="space-y-4">
+      <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 flex items-start gap-3 text-rose-800">
+        <Trash2 className="w-5 h-5 shrink-0 mt-0.5" />
+        <div className="text-sm">
+          <p className="font-bold mb-1">Warning: Irreversible Action</p>
+          <p>You are about to permanently delete the user <strong>{userToDelete?.full_name}</strong> ({userToDelete?.email}). This action cannot be undone.</p>
+        </div>
+      </div>
+=======
+
+  {
+        selectedRole === 'branch_manager' && (
+          <div className="space-y-1">
+            <Input label="Assigned Branch ID" {...register('branch_id')} className="rounded-xl" placeholder="branch_uuid_here" />
           </div>
+        )
+      }
 
-          {selectedRole === 'branch_manager' && (
-            <div className="space-y-1">
-              <Input label="Assigned Branch ID" {...register('branch_id')} className="rounded-xl" placeholder="branch_uuid_here" />
-            </div>
-          )}
-
-          <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-6">
-            <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl h-10 px-4 focus:ring-slate-500 text-slate-700 bg-white border border-slate-200">Cancel</Button>
-            <Button type="submit" disabled={saveUserMut.isPending} className="rounded-xl h-10 px-6 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
-              {saveUserMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (isEditing ? 'Save Changes' : 'Create User')}
-            </Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Delete User">
-        <div className="space-y-4">
-          <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 flex items-start gap-3 text-rose-800">
-            <Trash2 className="w-5 h-5 shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <p className="font-bold mb-1">Warning: Irreversible Action</p>
-              <p>You are about to permanently delete the user <strong>{userToDelete?.full_name}</strong> ({userToDelete?.email}). This action cannot be undone.</p>
-            </div>
-          </div>
+      <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-6">
+        <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="rounded-xl h-10 px-4">Cancel</Button>
+        <Button type="submit" disabled={saveUserMut.isPending} className="rounded-xl h-10 px-6 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
+          {saveUserMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (isEditing ? 'Save Changes' : 'Create User')}
+        </Button>
+      </div>
+    </form >
+      </Modal >
+>>>>>>> 8d868895102b328d8361511d91ada1d55be989cb
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700">
@@ -558,8 +582,8 @@ export default function UserManagementPage() {
               {deleteUserMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Permanently Delete'}
             </Button>
           </div>
-        </div>
-      </Modal>
-    </div>
+        </div >
+      </Modal >
+    </div >
   );
 }

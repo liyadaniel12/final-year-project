@@ -81,7 +81,7 @@ export const getBranches = async (req, res) => {
 export const createBranch = async (req, res) => {
   try {
     const supabase = getSupabaseAdmin()
-    const { name, location, status } = req.body;
+    const { name, location } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: 'Branch name is required' });
@@ -89,7 +89,7 @@ export const createBranch = async (req, res) => {
 
     const { data: branch, error } = await supabase
       .from('branches')
-      .insert([{ name, location, status: status || 'active' }])
+      .insert([{ name, location }])
       .select()
       .single();
 
@@ -109,11 +109,11 @@ export const updateBranch = async (req, res) => {
   try {
     const supabase = getSupabaseAdmin()
     const { id } = req.params;
-    const { name, location, status } = req.body;
+    const { name, location } = req.body;
 
     const { data: branch, error } = await supabase
       .from('branches')
-      .update({ name, location, status })
+      .update({ name, location })
       .eq('id', id)
       .select()
       .single();
