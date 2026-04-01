@@ -111,6 +111,95 @@ export const authenticateAdmin = async (req, res, next) => {
   }
 }
 
+export const authenticateMainManager = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Access token required' })
+    }
+
+    const token = authHeader.substring(7)
+
+    const supabaseAdmin = getSupabaseAdmin()
+    const { data: userData, error: authError } = await supabaseAdmin.auth.getUser(token)
+
+    if (authError || !userData?.user) {
+      return res.status(401).json({ error: 'Invalid or expired token' })
+    }
+
+    const userId = userData.user.id
+
+    const { data: profile, error } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single()
+
+    if (error || !profile) {
+      return res.status(401).json({ error: 'User not found' })
+    }
+
+    if (profile.role !== 'admin' && profile.role !== 'main_manager') {
+      return res.status(403).json({ error: 'Main Manager access required' })
+    }
+
+    req.user = { id: userId, role: profile.role }
+    next()
+  } catch (err) {
+    console.error('Auth middleware error:', err)
+    return res.status(401).json({ error: 'Invalid token' })
+  }
+}
+
+export const authenticateBranchManager = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Access token required' })
+    }
+    const token = authHeader.substring(7)
+    const supabaseAdmin = getSupabaseAdmin()
+    const { data: userData, error: authError } = await supabaseAdmin.auth.getUser(token)
+
+    if (authError || !userData?.user) {
+      return res.status(401).json({ error: 'Invalid or expired token' })
+    }
+
+    const { data: profile, error } = await supabaseAdmin
+      .from('profiles')
+      .select('role, branch_id')
+      .eq('id', userData.user.id)
+      .single()
+
+    if (error || !profile) return res.status(401).json({ error: 'User not found' })
+
+    if (profile.role !== 'branch_manager' && profile.role !== 'admin' && profile.role !== 'main_manager') {
+      return res.status(403).json({ error: 'Branch Manager access required' })
+    }
+
+    let resolvedBranchId = profile.branch_id;
+
+    if (!resolvedBranchId && profile.role === 'branch_manager') {
+       // Demo-friendly fallback: If a branch manager has no branch, auto-assign them to the first one available
+       const { data: firstBranch } = await supabaseAdmin.from('branches').select('id').limit(1).single();
+       if (firstBranch) {
+          resolvedBranchId = firstBranch.id;
+          // Optionally update the DB right here so it persists
+          await supabaseAdmin.from('profiles').update({ branch_id: resolvedBranchId }).eq('id', userData.user.id);
+       } else {
+          return res.status(403).json({ error: 'No branch assigned to your account and no branches exist in the system to fallback to.' })
+       }
+    }
+
+    req.user = { id: userData.user.id, role: profile.role, branch_id: resolvedBranchId }
+    next()
+  } catch (err) {
+    console.error('Auth middleware error:', err)
+    return res.status(401).json({ error: 'Invalid token' })
+  }
+}
+
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body

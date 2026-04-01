@@ -26,6 +26,7 @@ export function Sidebar() {
         return [
           { href: '/manager', label: 'Dashboard', icon: LayoutDashboard },
           { href: '/manager/stock', label: 'Stock Overview', icon: Package },
+          { href: '/manager/sales', label: 'Sale Update', icon: LineChart },
           { href: '/manager/expiry', label: 'Expiry Analysis', icon: AlertTriangle },
           { href: '/manager/redistribution', label: 'Redistribution', icon: ArrowRightLeft },
           { href: '/manager/feedback', label: 'Customer Feedback', icon: MessageSquare },

@@ -1,155 +1,145 @@
 'use client';
 
-import React, { useState } from 'react';
-import { PackagePlus, Calendar, Hash, Boxes, User, Store } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Package, CalendarPlus, Search, Info, Loader2, CheckCircle } from 'lucide-react';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 export default function BranchStockPage() {
+  const { user } = useAuth();
   const [productType, setProductType] = useState('');
-  const [batchNumber, setBatchNumber] = useState('');
+  const [products, setProducts] = useState<any[]>([]);
   const [quantity, setQuantity] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:9000/api/products');
+        const json = await response.json();
+        setProducts(json.products || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ productType, batchNumber, quantity, expiryDate });
-    // TODO: submit to backend
+    setSubmitLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Authentication required");
+
+      const res = await fetch('http://localhost:9000/api/branch-manager/stock', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          product_id: productType,
+          quantity: Number(quantity),
+          expiry_date: expiryDate
+        })
+      });
+
+      if (!res.ok) {
+        const text = await res.json();
+        throw new Error(text.error || "Failed to add stock");
+      }
+
+      setSuccess("Successfully recorded stock entry!");
+      setProductType('');
+      setQuantity('');
+      setExpiryDate('');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSubmitLoading(false);
+    }
   };
 
+  const selectedProduct = products.find(p => p.id === productType);
+
   return (
-    <div className="space-y-6 pb-10 max-w-5xl mx-auto">
-      {/* Header Info */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-        <div className="flex items-center gap-4">
-          <div className="bg-indigo-50 p-3 rounded-2xl text-indigo-600">
-            <Store className="w-8 h-8" />
+    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Record Stock</h1>
+          <p className="text-slate-500 mt-1">Log incoming stock for your branch</p>
+        </div>
+        
+        <div className="flex items-center gap-3 bg-white p-2 pr-4 rounded-full border border-slate-200 shadow-sm">
+          <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm uppercase">
+            {user?.email?.charAt(0) || 'M'}
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Branch A</h1>
-            <p className="text-slate-500 font-medium flex items-center gap-1.5 mt-0.5 text-sm">
-              <User className="w-4 h-4" />
-              Omar Khalid
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-slate-500">Today's Entries</span>
-          <div className="bg-indigo-600 text-white w-10 h-10 flex items-center justify-center rounded-xl font-bold shadow-sm">
-            2
+            <div className="font-bold text-sm text-slate-900 leading-tight">{user?.email || 'Manager'}</div>
+            <div className="text-xs text-slate-500 font-medium">Branch Operations</div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Form Section */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100">
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2 mb-1">
-                <PackagePlus className="w-6 h-6 text-indigo-600" />
-                Record Stock
-              </h2>
-              <p className="text-slate-500">Log incoming stock for your branch</p>
-            </div>
-
-            <form onSubmit={handleSave} className="space-y-6">
-              <h3 className="font-semibold text-slate-800 text-lg border-b pb-3 border-slate-100">New Stock Entry</h3>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 block">Product Type</label>
-                <div className="relative">
-                  <select 
-                    value={productType}
-                    onChange={(e) => setProductType(e.target.value)}
-                    required
-                    className="w-full h-12 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all appearance-none font-medium"
-                  >
-                    <option value="" disabled>Select product...</option>
-                    <option value="fresh_milk">Fresh Milk</option>
-                    <option value="cheese">Cheese</option>
-                    <option value="yogurt">Yogurt</option>
-                    <option value="butter">Butter</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700 block">Batch Number</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Hash className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <input 
-                      type="text" 
-                      required
-                      placeholder="e.g. MLK-2026-010"
-                      value={batchNumber}
-                      onChange={(e) => setBatchNumber(e.target.value)}
-                      className="w-full h-12 pl-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700 block">Quantity</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Boxes className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <input 
-                      type="number" 
-                      required
-                      min="1"
-                      placeholder={productType ? "Enter quantity" : "Select product first"}
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      disabled={!productType}
-                      className="w-full h-12 pl-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed cursor-text"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 block">Expiry Date</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Calendar className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <input 
-                    type="date" 
-                    required
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    className="w-full h-12 pl-10 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <button 
-                  type="submit" 
-                  className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-sm transition-colors text-sm"
-                >
-                  Save Stock Record
-                </button>
-              </div>
-            </form>
-          </div>
+      <Card className="rounded-2xl shadow-sm border border-slate-200 bg-white overflow-hidden p-6">
+        <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
+          <CalendarPlus className="w-5 h-5 text-indigo-500" />
+          <h2 className="font-bold text-slate-800 text-lg">New Stock Entry</h2>
         </div>
 
-        {/* Recent Records Sidebar */}
-        <div className="lg:col-span-1">
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 h-full min-h-[400px]">
-            <h3 className="font-bold text-slate-800 text-lg border-b pb-3 mb-6 border-slate-100">Today's Records</h3>
-            
-            <div className="flex flex-col items-center justify-center p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 border-dashed h-48">
-              <PackagePlus className="w-8 h-8 text-slate-300 mb-3" />
-              <p className="text-sm font-medium text-slate-500">No stock recorded yet today...</p>
+        {error && <div className="mb-4 p-3 bg-rose-50 text-rose-600 rounded-lg text-sm border border-rose-100">{error}</div>}
+        {success && <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded-lg text-sm border border-emerald-100 flex items-center gap-2"><CheckCircle className="w-4 h-4" /> {success}</div>}
+
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          <div className="flex flex-col gap-5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Product Type</label>
+              <select required value={productType} onChange={e => setProductType(e.target.value)} className="w-full h-11 px-3 rounded-xl border border-slate-200 text-sm bg-white outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-medium">
+                <option value="" disabled>Select product...</option>
+                {products.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Quantity</label>
+              <div className="relative">
+                <input required type="number" step="0.01" min="0" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder={productType ? "Enter amount" : "Select product first"} disabled={!productType} className="w-full h-11 px-3 pr-12 rounded-xl border border-slate-200 text-sm bg-white disabled:bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-medium placeholder:text-slate-400" />
+                {selectedProduct && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 uppercase pointer-events-none">
+                    {selectedProduct.unit}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Expiry Date</label>
+              <input required value={expiryDate} onChange={e => setExpiryDate(e.target.value)} type="date" className="w-full h-11 px-3 rounded-xl border border-slate-200 text-sm bg-white outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-medium" />
             </div>
           </div>
-        </div>
-      </div>
+
+          <div className="pt-4 flex justify-start">
+            <Button disabled={submitLoading} type="submit" className="h-11 px-8 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-sm w-full md:w-auto">
+              {submitLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Stock Record'}
+            </Button>
+          </div>
+        </form>
+      </Card>
+      
     </div>
   );
 }

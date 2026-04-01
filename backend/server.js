@@ -8,6 +8,8 @@ import userRoutes from './routes/userRoutes.js'
 import branchRoutes from './routes/branchRoutes.js'
 import productRoutes from './routes/productRoutes.js'
 import systemRoutes from './routes/systemRoutes.js'
+import managerRoutes from './routes/managerRoutes.js'
+import branchManagerRoutes from './routes/branchManagerRoutes.js'
 
 const app = express()
 
@@ -24,6 +26,8 @@ app.use('/api/users', userRoutes)
 app.use('/api/branches', branchRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/system', systemRoutes)
+app.use('/api/manager', managerRoutes)
+app.use('/api/branch-manager', branchManagerRoutes)
 
 const PORT = process.env.PORT || 9000
 
