@@ -1,5 +1,5 @@
 import express from 'express'
-import { createUser, getUsers } from '../controllers/userController.js'
+import { createUser, getUsers, updateUser } from '../controllers/userController.js'
 import { authenticateAdmin, loginUser, changePassword } from '../middleware/auth.js'
 
 const router = express.Router()
@@ -11,5 +11,6 @@ router.put('/change-password', changePassword)
 // Protected routes (require admin authentication)
 router.post('/', authenticateAdmin, createUser)
 router.get('/', authenticateAdmin, getUsers)
+router.put('/:id', authenticateAdmin, updateUser)
 
 export default router

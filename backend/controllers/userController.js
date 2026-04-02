@@ -62,7 +62,9 @@ export const createUser = async (req, res) => {
       .upsert({
         id: data.user.id,
         email: data.user.email,
+        full_name: full_name || null,
         role,
+        status: status || 'active',
         branch_id: branch_id || null,
         created_at: new Date().toISOString()
       }, { onConflict: 'id' })
@@ -99,12 +101,14 @@ export const getUsers = async (req, res) => {
   try {
     const supabaseAdmin = getSupabaseAdmin()
 
-    const { data, error } = await supabaseAdmin
+    const { data: users, error } = await supabaseAdmin
       .from('profiles')
       .select(`
         id,
         email,
+        full_name,
         role,
+        status,
         branch_id,
         created_at
       `)
@@ -115,9 +119,39 @@ export const getUsers = async (req, res) => {
       return res.status(500).json({ error: error.message || 'Failed to fetch users', details: error })
     }
 
-    res.json({ users: data })
+    res.json({ users })
   } catch (err) {
     console.error('Server error in getUsers:', err)
     res.status(500).json({ error: 'Server error' })
+  }
+}
+
+export const updateUser = async (req, res) => {
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+    const { id } = req.params;
+    const { role, branch_id, status, full_name } = req.body;
+
+    const { error, data } = await supabaseAdmin
+      .from('profiles')
+      .update({ role, status, branch_id: branch_id || null, full_name })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+       console.error('Update user error:', error);
+       return res.status(500).json({ error: error.message });
+    }
+
+    // Sync relationship to branches table if assigned
+    if (branch_id && role === 'branch_manager') {
+       await supabaseAdmin.from('branches').update({ manager_id: id }).eq('id', branch_id);
+    }
+
+    res.json({ message: 'User updated successfully', user: data });
+  } catch (err) {
+    console.error('Server error in updateUser:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 }

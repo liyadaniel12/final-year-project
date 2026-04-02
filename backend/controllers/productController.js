@@ -23,7 +23,7 @@ export const getProducts = async (req, res) => {
 export const createProduct = async (req, res) => {
   try {
     const supabase = getSupabaseAdmin()
-    const { name, description, price, stock, category, unit } = req.body;
+    const { name, description, price, stock, category, unit, shelf_life_days } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
       return res.status(400).json({ error: 'Name, price, and stock are required' });
@@ -31,7 +31,7 @@ export const createProduct = async (req, res) => {
 
     const { data: product, error } = await supabase
       .from('products')
-      .insert([{ name, description, price, stock, category, unit: unit || 'unit' }])
+      .insert([{ name, description, price, stock, category, unit: unit || 'unit', shelf_life_days: shelf_life_days || 14 }])
       .select()
       .single();
 
@@ -51,7 +51,7 @@ export const updateProduct = async (req, res) => {
   try {
     const supabase = getSupabaseAdmin()
     const { id } = req.params;
-    const { name, description, price, stock, category, unit } = req.body;
+    const { name, description, price, stock, category, unit, shelf_life_days } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
       return res.status(400).json({ error: 'Name, price, and stock are required' });
@@ -59,7 +59,7 @@ export const updateProduct = async (req, res) => {
 
     const { data: product, error } = await supabase
       .from('products')
-      .update({ name, description, price, stock, category, unit })
+      .update({ name, description, price, stock, category, unit, shelf_life_days })
       .eq('id', id)
       .select()
       .single();

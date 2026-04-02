@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 export const getSystemOverview = async (req, res) => {
   try {
     const supabase = getSupabaseAdmin()
-    
+
     // Fetch all profiles, branches, products
     const [profilesRes, branchesRes, productsRes] = await Promise.all([
       supabase.from('profiles').select('*'),
@@ -71,7 +71,7 @@ export const getSystemOverview = async (req, res) => {
 export const getManagerDashboard = async (req, res) => {
   try {
     const supabase = getSupabaseAdmin()
-    
+
     // Fetch user profile to get manager details
     const userId = req.user.id;
     const { data: managerProfile, error: profileError } = await supabase
@@ -83,23 +83,21 @@ export const getManagerDashboard = async (req, res) => {
     if (profileError) {
       console.error('Error fetching manager profile:', profileError);
     }
-    
+
     // Fetch all required data for dashboard
     const [branchesRes, productsRes, inventoryRes, branchManagersRes, salesRes, transfersRes] = await Promise.all([
       supabase.from('branches').select('*'),
       supabase.from('products').select('*'),
       supabase.from('branch_inventory').select('*'),
       supabase.from('profiles').select('id, full_name, email, branch_id').eq('role', 'branch_manager'),
-      supabase.from('sales').select('created_at'),
-      supabase.from('transfers').select('status')
+      supabase.from('customer_feedbacks').select('*').eq('is_critical', true)
     ]);
 
     const branches = branchesRes.data || [];
     const products = productsRes.data || [];
     const inventory = inventoryRes.data || [];
     const branchManagers = branchManagersRes.data || [];
-    const sales = salesRes.data || [];
-    const transfers = transfersRes.data || [];
+    const criticalFeedbacks = criticalFeedbacksRes.data || [];
 
     // Helper functions for dates
     const now = new Date();
@@ -107,11 +105,11 @@ export const getManagerDashboard = async (req, res) => {
     thirtyDaysFromNow.setDate(now.getDate() + 30);
 
     const today = new Date();
-    today.setHours(0,0,0,0);
-    
+    today.setHours(0, 0, 0, 0);
+
     const thisWeek = new Date(today);
     thisWeek.setDate(today.getDate() - today.getDay());
-    
+
     const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
     const todaySales = sales.filter(s => new Date(s.created_at) >= today).length;
@@ -147,19 +145,19 @@ export const getManagerDashboard = async (req, res) => {
       if (bPerf) bPerf.batches += 1;
 
       if (!item.expiry_date) return;
-      
+
       const expiryDate = new Date(item.expiry_date);
       const product = products.find(p => p.id === item.product_id);
       const branch = branches.find(b => b.id === item.branch_id);
-      
+
       // Calculate days difference
       const timeDiff = expiryDate.getTime() - now.getTime();
       const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-      
+
       if (expiryDate < now) {
         expiredItems++;
         if (bPerf) bPerf.expired += 1;
-        
+
         // Critical alert: Expired
         criticalAlerts.push({
           id: `crit-exp-${item.id}`,
@@ -168,12 +166,12 @@ export const getManagerDashboard = async (req, res) => {
           productName: product ? `${product.name} ${product.unit}` : 'Unknown Product',
           branchName: branch ? branch.name : 'Unknown Branch'
         });
-        
+
       } else if (expiryDate <= thirtyDaysFromNow) {
         // Technically "near expiry" is <= 30 days overall
         nearExpiryItems++;
         if (bPerf) bPerf.near += 1;
-        
+
         // Critical alert: Near Expiry (only those <= 7 days)
         if (daysDiff <= 7) {
           criticalAlerts.push({
@@ -188,6 +186,20 @@ export const getManagerDashboard = async (req, res) => {
       }
     });
 
+    criticalFeedbacks.forEach(cf => {
+      // For branch name, we might just have the text literal 'Main Branch' from dropdown instead of a UUID if the user stores the text directly.
+      const branchObj = branches.find(b => b.id === cf.branch_id);
+      const branchName = branchObj ? branchObj.name : cf.branch_id; // Handles text like 'Main Branch'
+      criticalAlerts.push({
+        id: `crit-feedback-${cf.id}`,
+        type: 'customer_feedback',
+        batch: cf.batch_number || 'Unknown',
+        branchName: branchName || 'Unknown Branch',
+        message: cf.feedback_text || 'Urgent Customer Report',
+        date: cf.created_at
+      });
+    });
+
     // Finalize Branch Performance formats
     const branchPerformance = Object.values(branchPerformanceMap).map(b => {
       let freshPercent = 100;
@@ -195,7 +207,7 @@ export const getManagerDashboard = async (req, res) => {
         const freshBatches = b.batches - b.near - b.expired;
         freshPercent = Math.round((Math.max(freshBatches, 0) / b.batches) * 100);
       }
-      
+
       let risk = 'Low';
       if (b.expired > 0 || freshPercent < 70) risk = 'High';
       else if (b.near > 10 || freshPercent < 90) risk = 'Medium';
@@ -207,16 +219,18 @@ export const getManagerDashboard = async (req, res) => {
       };
     });
 
-    // Sort critical alerts (expired first, then near expiry by days)
+    // Sort critical alerts (customer feedback first, then expired, then near expiry by days)
     criticalAlerts.sort((a, b) => {
+      if (a.type === 'customer_feedback' && b.type !== 'customer_feedback') return -1;
+      if (b.type === 'customer_feedback' && a.type !== 'customer_feedback') return 1;
       if (a.type === 'expired' && b.type !== 'expired') return -1;
       if (b.type === 'expired' && a.type !== 'expired') return 1;
       if (a.type === 'near' && b.type === 'near') return a.days - b.days;
       return 0;
     });
 
-    // Limit to top 5 alerts
-    const topAlerts = criticalAlerts.slice(0, 5);
+    // Limit to top 10 alerts
+    const topAlerts = criticalAlerts.slice(0, 10);
 
     res.json({
       managerInfo: {
@@ -236,7 +250,7 @@ export const getManagerDashboard = async (req, res) => {
       criticalAlerts: topAlerts,
       branchPerformance
     });
-    
+
   } catch (error) {
     console.error('Server error getting manager dashboard:', error);
     res.status(500).json({ error: 'Server error retrieving manager dashboard' });

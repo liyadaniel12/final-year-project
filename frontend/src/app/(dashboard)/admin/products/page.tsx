@@ -8,7 +8,10 @@ import { Modal } from '@/components/ui/Modal';
 import { supabase } from '@/lib/supabaseClient';
 import { Edit2, Trash2, Tag, Box, Info } from 'lucide-react';
 
+import { useRouter } from 'next/navigation';
+
 export default function ProductManagementPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -114,12 +117,9 @@ export default function ProductManagementPage() {
     }
   };
 
+  // Deprecated since we use explicit new page
   const openCreateModal = () => {
-    setForm({ name: '', description: '', price: '', stock: '', category: '', unit: '' });
-    setIsEditMode(false);
-    setEditingId(null);
-    setMessage(null);
-    setIsModalOpen(true);
+    router.push('/admin/products/new');
   };
 
   const openEditModal = (product: any) => {
@@ -194,6 +194,7 @@ export default function ProductManagementPage() {
                   <th className="px-6 py-5 rounded-tl-3xl">Product Name</th>
                   <th className="px-6 py-5">Category</th>
                   <th className="px-6 py-5">Unit</th>
+                  <th className="px-6 py-5">Shelf Life</th>
                   <th className="px-6 py-5">Description</th>
                   <th className="px-6 py-5 text-right rounded-tr-3xl">Actions</th>
                 </tr>
@@ -209,6 +210,9 @@ export default function ProductManagementPage() {
                     </td>
                     <td className="px-6 py-5">
                       <span className="font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-md text-xs">{p.unit || 'unit'}</span>
+                    </td>
+                    <td className="px-6 py-5 text-slate-600 font-medium">
+                      {p.shelf_life_days ? `${p.shelf_life_days} days` : '14 days'}
                     </td>
                     <td className="px-6 py-5">
                       <span className="text-slate-500 font-medium truncate max-w-[200px] inline-block">{p.description || '-'}</span>

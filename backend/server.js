@@ -10,7 +10,8 @@ import productRoutes from './routes/productRoutes.js'
 import systemRoutes from './routes/systemRoutes.js'
 import managerRoutes from './routes/managerRoutes.js'
 import branchManagerRoutes from './routes/branchManagerRoutes.js'
-import publicRoutes from './routes/publicRoutes.js'
+import batchRoutes from './routes/batchRoutes.js'
+import feedbackRoutes from './routes/feedbackRoutes.js'
 
 const app = express()
 
@@ -29,7 +30,8 @@ app.use('/api/products', productRoutes)
 app.use('/api/system', systemRoutes)
 app.use('/api/manager', managerRoutes)
 app.use('/api/branch-manager', branchManagerRoutes)
-app.use('/api/public', publicRoutes)
+app.use('/api/batches', batchRoutes)
+app.use('/api/feedback', feedbackRoutes)
 
 const PORT = process.env.PORT || 9000
 

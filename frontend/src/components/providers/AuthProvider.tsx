@@ -23,7 +23,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  logout: async () => {},
+  logout: async () => { },
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initializeAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (session?.user) {
         const profile = await fetchProfile(session.user.id);
         setUser(profile);
@@ -88,28 +88,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const isAuthRoute = pathname === '/login';
-    const isPublicRoute = pathname === '/';
-    
-    // Redirect if not logged in and not on a public/auth route
-    if (!user && !isAuthRoute && !isPublicRoute) {
+    const publicRoutes = ['/login', '/', '/forgot-password', '/verify', '/feedback'];
+    const isPublicRoute = publicRoutes.includes(pathname);
+
+    // Redirect if not logged in
+    if (!user && !isPublicRoute) {
       router.push('/login');
       return;
     }
 
     // Redirect to respective dashboard if logged in and trying to access /login or root
-    if (user && (isAuthRoute || isPublicRoute)) {
-      if (user.role === 'admin') {
-        if (!pathname.startsWith('/admin')) router.push('/admin');
-      } else if (user.role === 'main_manager') {
-        if (!pathname.startsWith('/manager')) router.push('/manager');
-      } else if (user.role === 'branch_manager') {
-        if (!pathname.startsWith('/branch')) router.push('/branch');
-      } else {
-        if (pathname !== '/login') router.push('/login'); // Fallback if role missing
-      }
+    if (user && (pathname === '/login' || pathname === '/')) {
+      if (user.role === 'admin') router.push('/admin');
+      else if (user.role === 'main_manager') router.push('/manager');
+      else if (user.role === 'branch_manager') router.push('/branch');
+      else router.push('/login'); // Fallback if role missing
     }
-    
+
     // Additional simple role protection
     if (user && pathname.startsWith('/admin') && user.role !== 'admin') {
       router.push('/');
