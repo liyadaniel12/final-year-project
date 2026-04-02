@@ -85,17 +85,19 @@ export const getManagerDashboard = async (req, res) => {
     }
     
     // Fetch all required data for dashboard
-    const [branchesRes, productsRes, inventoryRes, branchManagersRes] = await Promise.all([
+    const [branchesRes, productsRes, inventoryRes, branchManagersRes, criticalFeedbacksRes] = await Promise.all([
       supabase.from('branches').select('*'),
       supabase.from('products').select('*'),
       supabase.from('branch_inventory').select('*'),
-      supabase.from('profiles').select('id, full_name, email, branch_id').eq('role', 'branch_manager')
+      supabase.from('profiles').select('id, full_name, email, branch_id').eq('role', 'branch_manager'),
+      supabase.from('customer_feedbacks').select('*').eq('is_critical', true)
     ]);
 
     const branches = branchesRes.data || [];
     const products = productsRes.data || [];
     const inventory = inventoryRes.data || [];
     const branchManagers = branchManagersRes.data || [];
+    const criticalFeedbacks = criticalFeedbacksRes.data || [];
 
     // Helper functions for dates
     const now = new Date();
@@ -170,6 +172,20 @@ export const getManagerDashboard = async (req, res) => {
       }
     });
 
+    criticalFeedbacks.forEach(cf => {
+      // For branch name, we might just have the text literal 'Main Branch' from dropdown instead of a UUID if the user stores the text directly.
+      const branchObj = branches.find(b => b.id === cf.branch_id);
+      const branchName = branchObj ? branchObj.name : cf.branch_id; // Handles text like 'Main Branch'
+      criticalAlerts.push({
+        id: `crit-feedback-${cf.id}`,
+        type: 'customer_feedback',
+        batch: cf.batch_number || 'Unknown',
+        branchName: branchName || 'Unknown Branch',
+        message: cf.feedback_text || 'Urgent Customer Report',
+        date: cf.created_at
+      });
+    });
+
     // Finalize Branch Performance formats
     const branchPerformance = Object.values(branchPerformanceMap).map(b => {
       let freshPercent = 100;
@@ -189,16 +205,18 @@ export const getManagerDashboard = async (req, res) => {
       };
     });
 
-    // Sort critical alerts (expired first, then near expiry by days)
+    // Sort critical alerts (customer feedback first, then expired, then near expiry by days)
     criticalAlerts.sort((a, b) => {
+      if (a.type === 'customer_feedback' && b.type !== 'customer_feedback') return -1;
+      if (b.type === 'customer_feedback' && a.type !== 'customer_feedback') return 1;
       if (a.type === 'expired' && b.type !== 'expired') return -1;
       if (b.type === 'expired' && a.type !== 'expired') return 1;
       if (a.type === 'near' && b.type === 'near') return a.days - b.days;
       return 0;
     });
 
-    // Limit to top 5 alerts
-    const topAlerts = criticalAlerts.slice(0, 5);
+    // Limit to top 10 alerts
+    const topAlerts = criticalAlerts.slice(0, 10);
 
     res.json({
       managerInfo: {

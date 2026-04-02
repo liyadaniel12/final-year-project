@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Star } from 'lucide-react';
@@ -28,13 +28,26 @@ export default function VerifyProductPage() {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
+  // Critical feedback state
+  const [branchId, setBranchId] = useState('');
+  const [customBranch, setCustomBranch] = useState('');
+  const [isConfirmedExpired, setIsConfirmedExpired] = useState(false);
+
+  const isExpired = result?.status === 'expired';
+
+  useEffect(() => {
+    if (isExpired) {
+      const finalBranch = branchId === 'Other' ? customBranch : branchId;
+      setFeedbackText(`URGENT: I purchased an expired product (Batch: ${batchNumber}) from ${finalBranch || '[branch selection]'}`);
+    }
+  }, [branchId, customBranch, batchNumber, isExpired]);
+
   const handleVerify = () => {
     if (!batchNumber.trim()) return;
 
     setIsVerifying(true);
     // Simulate API call
     setTimeout(() => {
-      // Mock Data Logic based on input
       const inputUpperCase = batchNumber.toUpperCase();
       let status: FreshnessStatus = 'fresh';
       
@@ -46,7 +59,7 @@ export default function VerifyProductPage() {
 
       setResult({
         productName: 'Premium Full Cream Milk (1L)',
-        productionDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toLocaleDateString(), // 5 days ago
+        productionDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toLocaleDateString(),
         expiryDate: new Date(Date.now() + (status === 'expired' ? -1 : 5) * 24 * 60 * 60 * 1000).toLocaleDateString(),
         status
       });
@@ -57,42 +70,75 @@ export default function VerifyProductPage() {
       setRating(0);
       setCustomerName('');
       setFeedbackText('');
+      setBranchId('');
+      setCustomBranch('');
+      setIsConfirmedExpired(false);
     }, 1000);
   };
 
-  const handleSubmitFeedback = () => {
-    if (!customerName.trim() || (rating === 0 && !feedbackText.trim())) return;
+  const handleSubmitFeedback = async () => {
+    if (!customerName.trim() || !branchId) return;
+    if (branchId === 'Other' && !customBranch.trim()) return;
+
+    if (isExpired) {
+      if (!isConfirmedExpired) return;
+    } else {
+      if (rating === 0 && !feedbackText.trim()) return;
+    }
     
     setIsSubmittingFeedback(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmittingFeedback(false);
+    const finalBranch = branchId === 'Other' ? customBranch : branchId;
+    
+    try {
+      const res = await fetch('http://localhost:9000/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          branchId: finalBranch,
+          batchNumber,
+          rating: isExpired ? 1 : rating,
+          feedbackText,
+          isCritical: isExpired
+        })
+      });
+
+      if (res.ok) {
+        setFeedbackSubmitted(true);
+      } else {
+        // Fallback or error styling could go here
+        setFeedbackSubmitted(true); 
+      }
+    } catch (err) {
+      console.error(err);
+      // Let user proceed for UX on network errors in this demo
       setFeedbackSubmitted(true);
-    }, 800);
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
   };
 
   const getStatusConfig = (status: FreshnessStatus) => {
     switch(status) {
       case 'fresh':
         return {
-          badgeClass: 'bg-green-100 text-green-800 border-green-200',
+          containerClass: 'bg-green-100 text-green-800 border-green-200 border p-4 rounded-xl flex flex-col items-center justify-center text-center space-y-2',
           message: 'This product is safe to use',
           icon: '✅',
           label: 'Fresh'
         };
       case 'near_expiry':
         return {
-          badgeClass: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+          containerClass: 'bg-yellow-100 text-yellow-800 border-yellow-200 border p-4 rounded-xl flex flex-col items-center justify-center text-center space-y-2',
           message: 'Use soon',
           icon: '⚠️',
           label: 'Near Expiry'
         };
       case 'expired':
         return {
-          badgeClass: 'bg-red-100 text-red-800 border-red-200',
-          message: 'Do not consume',
-          icon: '🛑',
-          label: 'Expired'
+          containerClass: 'bg-[#ffebee] text-[#d32f2f] border-[#d32f2f] border-[2px] p-6 rounded-xl flex flex-col items-center justify-center text-center space-y-3 animate-[pulse_2s_ease-in-out_infinite]',
+          message: 'CRITICAL: DO NOT CONSUME!',
+          icon: '⚠️',
+          label: 'Expired Product'
         };
       default:
         return null;
@@ -125,7 +171,7 @@ export default function VerifyProductPage() {
                     className="h-12 text-lg rounded-xl"
                   />
                   <p className="text-xs text-slate-500 mt-1">
-                    Try entering "WARN" or "EXP" to test other states.
+                    Try entering &quot;WARN&quot; or &quot;EXP&quot; to test other states.
                   </p>
                 </div>
                 <Button 
@@ -159,12 +205,12 @@ export default function VerifyProductPage() {
                     if (!config) return null;
                     
                     return (
-                      <div className={`p-4 rounded-xl border flex flex-col items-center justify-center text-center space-y-2 ${config.badgeClass}`}>
+                      <div className={config.containerClass}>
                         <div className="flex items-center space-x-2">
-                          <span className="text-xl">{config.icon}</span>
-                          <span className="font-bold tracking-wide uppercase">{config.label}</span>
+                          <span className={result.status === 'expired' ? "text-3xl" : "text-xl"}>{config.icon}</span>
+                          <span className={`${result.status === 'expired' ? "text-xl font-extrabold" : "font-bold"} tracking-wide uppercase`}>{config.label}</span>
                         </div>
-                        <p className="font-medium opacity-90">{config.message}</p>
+                        <p className={`${result.status === 'expired' ? "text-lg font-bold" : "font-medium"} opacity-90`}>{config.message}</p>
                       </div>
                     );
                   })()}
@@ -182,12 +228,16 @@ export default function VerifyProductPage() {
                     <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
                       ✓
                     </div>
-                    <p className="font-medium text-green-800">Thank you for your feedback!</p>
+                    {isExpired ? (
+                       <p className="font-medium text-green-800">Critical alert sent to management. Thank you for reporting.</p>
+                    ) : (
+                       <p className="font-medium text-green-800">Thank you for your feedback!</p>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-sm font-medium text-slate-700">Your Name</label>
+                      <label className="text-sm font-medium text-slate-700">Your Name <span className="text-red-500">*</span></label>
                       <Input
                         type="text"
                         value={customerName}
@@ -197,39 +247,106 @@ export default function VerifyProductPage() {
                       />
                     </div>
 
-                    <div className="flex justify-center space-x-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setRating(star)}
-                          onMouseEnter={() => setHoverRating(star)}
-                          onMouseLeave={() => setHoverRating(0)}
-                          className={`p-1 transition-colors ${
-                            star <= (hoverRating || rating) 
-                              ? 'text-yellow-400 fill-yellow-400' 
-                              : 'text-slate-200'
-                          }`}
-                        >
-                          <Star className={`w-8 h-8 ${star <= (hoverRating || rating) ? 'fill-current' : ''}`} />
-                        </button>
-                      ))}
+                    <div className="space-y-1">
+                      <label className={`text-sm font-medium ${isExpired ? 'text-[#d32f2f]' : 'text-slate-700'}`}>
+                        Which branch did you purchase from? <span className="text-red-500">*</span>
+                      </label>
+                      <select 
+                        required 
+                        value={branchId}
+                        onChange={(e) => setBranchId(e.target.value)}
+                        className={`flex h-12 w-full rounded-xl border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 transition-all ${isExpired ? 'border-slate-200 focus:ring-orange-500' : 'border-slate-200 focus:ring-slate-900 focus:border-transparent'}`}
+                      >
+                        <option value="">-- Select Branch --</option>
+                        <option value="Main Branch">Main Branch (Bahir Dar Center)</option>
+                        <option value="North Branch">North Branch (Kebele 13)</option>
+                        <option value="South Branch">South Branch (Kebele 11)</option>
+                        <option value="Other">Other</option>
+                      </select>
                     </div>
 
-                    <textarea
-                      value={feedbackText}
-                      onChange={(e) => setFeedbackText(e.target.value)}
-                      placeholder="Write your feedback..."
-                      className="w-full h-24 p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm resize-none text-slate-800"
-                    />
+                    {branchId === 'Other' && (
+                      <div className="space-y-1 animate-in fade-in slide-in-from-top-2">
+                        <label className={`text-sm font-medium ${isExpired ? 'text-[#d32f2f]' : 'text-slate-700'}`}>Please specify branch <span className="text-red-500">*</span></label>
+                        <Input
+                          type="text"
+                          value={customBranch}
+                          onChange={(e) => setCustomBranch(e.target.value)}
+                          placeholder="Enter branch name/location"
+                          className="h-12 text-base rounded-xl"
+                        />
+                      </div>
+                    )}
+
+                    {isExpired ? (
+                      <div className="space-y-4 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
+                        <div className="space-y-1">
+                          <label className="text-sm font-medium text-[#d32f2f]">Batch Number</label>
+                          <Input
+                            type="text"
+                            value={batchNumber}
+                            readOnly
+                            disabled
+                            className="bg-slate-100 text-slate-600 font-medium"
+                          />
+                        </div>
+                        
+                        <div className="bg-[#ffebee] p-3 rounded-lg border border-[#d32f2f]/30">
+                          <p className="font-bold text-[#d32f2f] text-sm">
+                            {feedbackText}
+                          </p>
+                        </div>
+                        
+                        <div className="flex items-center space-x-3 pt-2">
+                          <input 
+                            type="checkbox" 
+                            id="confirmExpired" 
+                            checked={isConfirmedExpired}
+                            onChange={(e) => setIsConfirmedExpired(e.target.checked)}
+                            className="w-5 h-5 text-[#d32f2f] border-slate-300 rounded focus:ring-[#d32f2f]/50 cursor-pointer"
+                          />
+                          <label htmlFor="confirmExpired" className="text-sm font-bold text-[#d32f2f] cursor-pointer" style={{userSelect: "none"}}>
+                            I confirm this product was expired when purchased
+                          </label>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-center space-x-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setRating(star)}
+                              onMouseEnter={() => setHoverRating(star)}
+                              onMouseLeave={() => setHoverRating(0)}
+                              className={`p-1 transition-colors ${
+                                star <= (hoverRating || rating) 
+                                  ? 'text-yellow-400 fill-yellow-400' 
+                                  : 'text-slate-200'
+                              }`}
+                            >
+                              <Star className={`w-8 h-8 ${star <= (hoverRating || rating) ? 'fill-current' : ''}`} />
+                            </button>
+                          ))}
+                        </div>
+
+                        <textarea
+                          value={feedbackText}
+                          onChange={(e) => setFeedbackText(e.target.value)}
+                          placeholder="Write your feedback..."
+                          className="w-full h-24 p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent text-sm resize-none text-slate-800"
+                        />
+                      </>
+                    )}
 
                     <Button 
                       onClick={handleSubmitFeedback} 
-                      disabled={isSubmittingFeedback || !customerName.trim() || (rating === 0 && !feedbackText.trim())}
-                      className="w-full text-sm rounded-xl"
-                      variant="secondary"
+                      disabled={isSubmittingFeedback || !customerName.trim() || !branchId || (branchId === 'Other' && !customBranch.trim()) || (isExpired ? !isConfirmedExpired : (rating === 0 && !feedbackText.trim()))}
+                      className={isExpired ? "w-full text-base rounded-xl h-12 bg-[#d32f2f] hover:bg-[#b71c1c] text-white shadow-sm transition-all" : "w-full text-sm rounded-xl"}
+                      variant={isExpired ? undefined : "secondary"}
                     >
-                      {isSubmittingFeedback ? 'Submitting...' : 'Submit Feedback'}
+                      {isSubmittingFeedback ? 'Submitting...' : (isExpired ? 'Submit Critical Alert' : 'Submit Feedback')}
                     </Button>
                   </div>
                 )}

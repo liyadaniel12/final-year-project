@@ -88,16 +88,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const isAuthRoute = pathname === '/login';
+    const publicRoutes = ['/login', '/', '/forgot-password', '/verify', '/feedback'];
+    const isPublicRoute = publicRoutes.includes(pathname);
     
     // Redirect if not logged in
-    if (!user && !isAuthRoute) {
+    if (!user && !isPublicRoute) {
       router.push('/login');
       return;
     }
 
     // Redirect to respective dashboard if logged in and trying to access /login or root
-    if (user && (isAuthRoute || pathname === '/')) {
+    if (user && (pathname === '/login' || pathname === '/')) {
       if (user.role === 'admin') router.push('/admin');
       else if (user.role === 'main_manager') router.push('/manager');
       else if (user.role === 'branch_manager') router.push('/branch');

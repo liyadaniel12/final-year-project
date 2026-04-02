@@ -90,7 +90,14 @@ export default function ManagerDashboard() {
           </div>
           <div className="p-4 space-y-3">
             {data.criticalAlerts.map((alert: any) => (
-              alert.type === 'expired' ? (
+              alert.type === 'customer_feedback' ? (
+                <div key={alert.id} className="flex items-start gap-3 bg-[#ffebee] p-3 rounded-xl border border-[#d32f2f] shadow-sm animate-pulse">
+                  <AlertOctagon className="w-5 h-5 text-[#d32f2f] shrink-0 mt-0.5" />
+                  <p className="text-sm text-[#b71c1c] font-bold">
+                    CUSTOMER ALERT: Expired product reported! Branch: {alert.branchName}, Batch: {alert.batch}. Details: {alert.message}
+                  </p>
+                </div>
+              ) : alert.type === 'expired' ? (
                 <div key={alert.id} className="flex items-start gap-3 bg-white p-3 rounded-xl border border-rose-200 shadow-sm">
                   <XCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
                   <p className="text-sm text-slate-700 font-medium">

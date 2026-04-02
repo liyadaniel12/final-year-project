@@ -16,7 +16,7 @@ export const getBranches = async (req, res) => {
     // Fetch branch managers to attach to branches
     const { data: managers, error: managersError } = await supabase
       .from('profiles')
-      .select('id, full_name, email, branch_id')
+      .select('*')
       .eq('role', 'branch_manager');
 
     if (managersError) {
@@ -39,7 +39,7 @@ export const getBranches = async (req, res) => {
 
     // Attach manager and real stats to each branch
     const branchesWithStats = branches.map(b => {
-      const manager = managers?.find(m => m.branch_id === b.id);
+      const manager = managers?.find(m => m.id === b.manager_id || m.branch_id === b.id);
       
       const branchItems = inventoryData?.filter(inv => inv.branch_id === b.id) || [];
       const totalStock = branchItems.reduce((sum, item) => sum + (item.stock || 0), 0);
