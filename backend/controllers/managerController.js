@@ -137,3 +137,38 @@ export const getManagerTransfers = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+export const getManagerFeedback = async (req, res) => {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data: feedback, error } = await supabase
+      .from('feedback')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching manager feedback:', error.message);
+      return res.json({ feedback: [] }); 
+    }
+
+    const feedbackList = (feedback || []).map(item => {
+      const dateObj = new Date(item.created_at);
+      return {
+        id: item.id,
+        initial: item.customer_name ? item.customer_name.charAt(0).toUpperCase() : 'U',
+        customer: item.customer_name,
+        branch: 'Branch N/A', // Tied to public verification input
+        message: item.message,
+        date: dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        rating: item.rating,
+        product: item.product_name,
+        batch: item.batch_number
+      };
+    });
+
+    res.json({ feedback: feedbackList });
+  } catch (error) {
+    console.error('Error fetching manager feedback:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};

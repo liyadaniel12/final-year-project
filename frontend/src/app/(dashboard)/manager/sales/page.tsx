@@ -24,7 +24,10 @@ export default function ManagerSalesOverviewPage() {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
 
-        if (!response.ok) throw new Error('Failed to fetch sales data');
+        if (!response.ok) {
+           const errData = await response.json().catch(() => ({}));
+           throw new Error(errData.error || 'Failed to fetch sales data');
+        }
 
         const jsonData = await response.json();
         setSales(jsonData.sales || []);
@@ -84,7 +87,7 @@ export default function ManagerSalesOverviewPage() {
         ))}
         {branchOptions.length === 0 && (
           <div className="col-span-5 text-center text-slate-400 py-4 italic border rounded-xl bg-slate-50">
-            No sales recorded yet. (Did you run the missing schema SQL script in Supabase?)
+            No sales recorded yet. Your branches have not logged any completed checkout transactions.
           </div>
         )}
       </div>

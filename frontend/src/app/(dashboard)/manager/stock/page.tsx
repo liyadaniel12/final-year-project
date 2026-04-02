@@ -25,7 +25,10 @@ export default function ManagerStockOverviewPage() {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
 
-        if (!response.ok) throw new Error('Failed to fetch stock data');
+        if (!response.ok) {
+           const errData = await response.json().catch(() => ({}));
+           throw new Error(errData.error || 'Failed to fetch stock data');
+        }
 
         const jsonData = await response.json();
         const sortedStock = (jsonData.stock || []).sort((a: any, b: any) => new Date(a.expiry).getTime() - new Date(b.expiry).getTime());

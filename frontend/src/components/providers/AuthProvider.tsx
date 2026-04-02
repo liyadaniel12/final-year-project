@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .single();
 
         if (error) {
-          console.error('Error fetching profile:', error);
+          console.error('Error fetching profile:', error.message || JSON.stringify(error));
           return null;
         }
         return data as UserProfile;
@@ -89,19 +89,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (loading) return;
 
     const isAuthRoute = pathname === '/login';
+    const isPublicRoute = pathname === '/';
     
-    // Redirect if not logged in
-    if (!user && !isAuthRoute) {
+    // Redirect if not logged in and not on a public/auth route
+    if (!user && !isAuthRoute && !isPublicRoute) {
       router.push('/login');
       return;
     }
 
     // Redirect to respective dashboard if logged in and trying to access /login or root
-    if (user && (isAuthRoute || pathname === '/')) {
-      if (user.role === 'admin') router.push('/admin');
-      else if (user.role === 'main_manager') router.push('/manager');
-      else if (user.role === 'branch_manager') router.push('/branch');
-      else router.push('/login'); // Fallback if role missing
+    if (user && (isAuthRoute || isPublicRoute)) {
+      if (user.role === 'admin') {
+        if (!pathname.startsWith('/admin')) router.push('/admin');
+      } else if (user.role === 'main_manager') {
+        if (!pathname.startsWith('/manager')) router.push('/manager');
+      } else if (user.role === 'branch_manager') {
+        if (!pathname.startsWith('/branch')) router.push('/branch');
+      } else {
+        if (pathname !== '/login') router.push('/login'); // Fallback if role missing
+      }
     }
     
     // Additional simple role protection

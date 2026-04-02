@@ -1,24 +1,79 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Search, MessageSquare, ArrowRight, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, MessageSquare, ArrowRight, User, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-
-const mockFeedback = [
-  { id: 1, initial: 'S', customer: 'Sarah J.', branch: 'Branch A', message: 'Very fresh, perfect quality! Received well before expiry. Will buy again.', date: '2026-03-25' },
-  { id: 2, initial: 'T', customer: 'Tom R.', branch: 'Branch A', message: 'Good quality yogurt, slight sourness indicating it was nearing expiry but still acceptable.', date: '2026-03-24' },
-  { id: 3, initial: 'M', customer: 'Mia C.', branch: 'Branch B', message: 'Excellent freshness. Packaging was intact and expiry date clearly marked. Great product!', date: '2026-03-23' },
-  { id: 4, initial: 'D', customer: 'David L.', branch: 'Branch C', message: 'Purchased milk that had already expired. Very disappointed. This should not be on the shelf.', date: '2026-03-25' },
-  { id: 5, initial: 'A', customer: 'Aisha M.', branch: 'Branch E', message: 'Always fresh! Love the long shelf life and consistent quality from this branch.', date: '2026-03-22' },
-  { id: 6, initial: 'C', customer: 'Carlos V.', branch: 'Branch B', message: 'Product was okay but I noticed it was close to expiry. Consider better stock rotation.', date: '2026-03-23' },
-  { id: 7, initial: 'Y', customer: 'Yuki T.', branch: 'Branch B', message: 'Perfect! Very fresh and well within expiry date. The batch verification feature is very helpful.', date: '2026-03-24' },
-  { id: 8, initial: 'K', customer: 'Kemal A.', branch: 'Branch C', message: 'Good quality overall, delivered fresh. Batch verification gave me confidence.', date: '2026-03-21' },
-  { id: 9, initial: 'N', customer: 'Nora K.', branch: 'Branch E', message: 'Best butter I have had. Consistent freshness every time I buy from Branch E.', date: '2026-03-20' }
-];
+import { supabase } from '@/lib/supabaseClient';
 
 export default function CustomerFeedbackPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [feedback, setFeedback] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchFeedback = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session?.access_token) return;
+
+        const response = await fetch('http://localhost:9000/api/manager/feedback', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch feedback');
+        }
+
+        const jsonData = await response.json();
+        setFeedback(jsonData.feedback || []);
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message || 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeedback();
+  }, []);
+
+  // Compute metrics
+  const totalMessages = feedback.length;
+  
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  const messagesToday = feedback.filter(f => new Date(f.date) >= today).length;
+  const messagesThisMonth = feedback.filter(f => new Date(f.date) >= thisMonth).length;
+
+  const filteredFeedback = feedback.filter(item => 
+    item.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.batch.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center text-rose-500 font-medium">
+        Error loading feedback: {error}
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
@@ -35,7 +90,7 @@ export default function CustomerFeedbackPage() {
         <Card className="rounded-2xl shadow-sm border border-slate-200 bg-white p-6 flex items-center justify-between hover:border-indigo-200 transition-colors cursor-default">
           <div className="space-y-1">
             <h3 className="text-slate-500 font-medium text-sm tracking-wide uppercase">Total Messages</h3>
-            <p className="text-4xl font-bold text-slate-900">9</p>
+            <p className="text-4xl font-bold text-slate-900">{totalMessages}</p>
           </div>
           <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-full text-indigo-600">
             <MessageSquare className="w-8 h-8" />
@@ -45,7 +100,7 @@ export default function CustomerFeedbackPage() {
         <Card className="rounded-2xl shadow-sm border border-slate-200 bg-white p-6 flex items-center justify-between hover:border-indigo-200 transition-colors cursor-default">
           <div className="space-y-1">
             <h3 className="text-slate-500 font-medium text-sm tracking-wide uppercase">This Month</h3>
-            <p className="text-4xl font-bold text-indigo-600">9</p>
+            <p className="text-4xl font-bold text-indigo-600">{messagesThisMonth}</p>
           </div>
           <div className="p-4 bg-slate-50 border border-slate-100 rounded-full text-slate-400">
             <MessageSquare className="w-8 h-8" />
@@ -55,7 +110,7 @@ export default function CustomerFeedbackPage() {
         <Card className="rounded-2xl shadow-sm border border-slate-200 bg-white p-6 flex items-center justify-between hover:border-emerald-200 transition-colors cursor-default">
           <div className="space-y-1">
             <h3 className="text-slate-500 font-medium text-sm tracking-wide uppercase">Today</h3>
-            <p className="text-4xl font-bold text-emerald-600">2</p>
+            <p className="text-4xl font-bold text-emerald-600">{messagesToday}</p>
           </div>
           <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-full text-emerald-500">
             <MessageSquare className="w-8 h-8" />
@@ -79,7 +134,7 @@ export default function CustomerFeedbackPage() {
           
           <div className="text-sm font-medium text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-slate-400" />
-            9 messages
+            {filteredFeedback.length} messages
           </div>
         </div>
         
@@ -100,7 +155,7 @@ export default function CustomerFeedbackPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {mockFeedback.map((item) => (
+              {filteredFeedback.map((item) => (
                 <tr key={item.id} className="bg-white hover:bg-slate-50/80 transition-colors items-start">
                   <td className="px-6 py-5 align-top">
                     <div className="flex items-center gap-3">
@@ -110,7 +165,7 @@ export default function CustomerFeedbackPage() {
                       <div>
                         <div className="font-bold text-slate-900">{item.customer}</div>
                         <div className="text-xs text-slate-500 font-medium inline-flex items-center px-2 py-0.5 rounded border border-slate-200 bg-slate-50 mt-1">
-                          {item.branch}
+                          ★ {item.rating} / 5 | {item.product} ({item.batch})
                         </div>
                       </div>
                     </div>
@@ -123,6 +178,13 @@ export default function CustomerFeedbackPage() {
                   </td>
                 </tr>
               ))}
+              {filteredFeedback.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-6 py-8 text-center text-slate-500 font-medium italic">
+                    No customer feedback received yet.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

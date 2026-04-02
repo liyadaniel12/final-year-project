@@ -29,7 +29,8 @@ export default function ManagerDashboard() {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to fetch dashboard data');
         }
 
         const jsonData = await response.json();
@@ -187,37 +188,37 @@ export default function ManagerDashboard() {
               <div className="flex items-center justify-between border-b border-slate-50 pb-3 opacity-50">
                 <div>
                   <div className="font-bold text-slate-800">Today</div>
-                  <div className="text-xs text-slate-500">Pending Setup</div>
+                  <div className="text-xs text-slate-500">Live feed</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-black text-lg text-emerald-600">0</div>
+                  <div className="font-black text-lg text-emerald-600">{data.kpis.todaySales ?? 0}</div>
                   <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Transactions</div>
                 </div>
               </div>
               <div className="flex items-center justify-between border-b border-slate-50 pb-3 opacity-50">
                 <div>
                   <div className="font-bold text-slate-800">This Week</div>
-                  <div className="text-xs text-slate-500">Pending Setup</div>
+                  <div className="text-xs text-slate-500">Trailing 7 days</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-black text-lg text-indigo-600">0</div>
+                  <div className="font-black text-lg text-indigo-600">{data.kpis.weekSales ?? 0}</div>
                   <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Transactions</div>
                 </div>
               </div>
               <div className="flex items-center justify-between opacity-50">
                 <div>
                   <div className="font-bold text-slate-800">This Month</div>
-                  <div className="text-xs text-slate-500">Pending Setup</div>
+                  <div className="text-xs text-slate-500">Current active month</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-black text-lg text-slate-700">0</div>
+                  <div className="font-black text-lg text-slate-700">{data.kpis.monthSales ?? 0}</div>
                   <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Transactions</div>
                 </div>
               </div>
             </div>
           </Card>
 
-          <Card className="rounded-2xl shadow-sm border border-slate-100 bg-white overflow-hidden opacity-50">
+          <Card className="rounded-2xl shadow-sm border border-slate-100 bg-white overflow-hidden">
             <div className="p-4 border-b border-slate-100 bg-slate-50">
               <h2 className="font-bold text-slate-800 text-sm">Active Transfers</h2>
             </div>
@@ -225,7 +226,7 @@ export default function ManagerDashboard() {
               <div>
                 <div className="font-bold text-slate-700">In-progress redistributions</div>
               </div>
-              <div className="text-3xl font-black text-amber-500">0</div>
+              <div className="text-3xl font-black text-amber-500">{data.activeTransfers ?? 0}</div>
             </div>
           </Card>
         </div>

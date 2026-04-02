@@ -24,7 +24,10 @@ export default function ExpiryOverviewPage() {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
 
-        if (!response.ok) throw new Error('Failed to fetch expiry data');
+        if (!response.ok) {
+           const errData = await response.json().catch(() => ({}));
+           throw new Error(errData.error || 'Failed to fetch expiry data');
+        }
 
         const jsonData = await response.json();
         // Specifically sort by risk priority internally

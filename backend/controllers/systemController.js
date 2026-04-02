@@ -85,22 +85,40 @@ export const getManagerDashboard = async (req, res) => {
     }
     
     // Fetch all required data for dashboard
-    const [branchesRes, productsRes, inventoryRes, branchManagersRes] = await Promise.all([
+    const [branchesRes, productsRes, inventoryRes, branchManagersRes, salesRes, transfersRes] = await Promise.all([
       supabase.from('branches').select('*'),
       supabase.from('products').select('*'),
       supabase.from('branch_inventory').select('*'),
-      supabase.from('profiles').select('id, full_name, email, branch_id').eq('role', 'branch_manager')
+      supabase.from('profiles').select('id, full_name, email, branch_id').eq('role', 'branch_manager'),
+      supabase.from('sales').select('created_at'),
+      supabase.from('transfers').select('status')
     ]);
 
     const branches = branchesRes.data || [];
     const products = productsRes.data || [];
     const inventory = inventoryRes.data || [];
     const branchManagers = branchManagersRes.data || [];
+    const sales = salesRes.data || [];
+    const transfers = transfersRes.data || [];
 
     // Helper functions for dates
     const now = new Date();
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(now.getDate() + 30);
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    const thisWeek = new Date(today);
+    thisWeek.setDate(today.getDate() - today.getDay());
+    
+    const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    const todaySales = sales.filter(s => new Date(s.created_at) >= today).length;
+    const weekSales = sales.filter(s => new Date(s.created_at) >= thisWeek).length;
+    const monthSales = sales.filter(s => new Date(s.created_at) >= thisMonth).length;
+
+    const activeTransfersCount = transfers.filter(t => ['Pending', 'In-transit', 'Accepted'].includes(t.status)).length;
 
     // Compute KPIs
     const totalStockBatches = inventory.length;
@@ -209,9 +227,12 @@ export const getManagerDashboard = async (req, res) => {
         totalStockBatches,
         nearExpiryItems,
         expiredItems,
-        monthlySalesTxns: 0 // Placeholder
+        monthlySalesTxns: monthSales,
+        todaySales,
+        weekSales,
+        monthSales
       },
-      activeTransfers: 0, // Placeholder
+      activeTransfers: activeTransfersCount,
       criticalAlerts: topAlerts,
       branchPerformance
     });

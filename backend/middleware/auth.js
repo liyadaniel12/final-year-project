@@ -125,7 +125,8 @@ export const authenticateMainManager = async (req, res, next) => {
     const { data: userData, error: authError } = await supabaseAdmin.auth.getUser(token)
 
     if (authError || !userData?.user) {
-      return res.status(401).json({ error: 'Invalid or expired token' })
+      console.error('Main Manager Auth Error:', authError?.message || 'No user data');
+      return res.status(401).json({ error: `Invalid or expired token: ${authError?.message || 'Unknown'}` })
     }
 
     const userId = userData.user.id
@@ -163,7 +164,8 @@ export const authenticateBranchManager = async (req, res, next) => {
     const { data: userData, error: authError } = await supabaseAdmin.auth.getUser(token)
 
     if (authError || !userData?.user) {
-      return res.status(401).json({ error: 'Invalid or expired token' })
+      console.error('Branch Manager Auth Error:', authError?.message || 'No user data');
+      return res.status(401).json({ error: `Invalid or expired token: ${authError?.message || 'Unknown'}` })
     }
 
     const { data: profile, error } = await supabaseAdmin

@@ -23,7 +23,10 @@ export default function RedistributionOverviewPage() {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
 
-        if (!response.ok) throw new Error('Failed to fetch transfers');
+        if (!response.ok) {
+           const errData = await response.json().catch(() => ({}));
+           throw new Error(errData.error || 'Failed to fetch transfers');
+        }
 
         const jsonData = await response.json();
         setTransfers(jsonData.transfers || []);
@@ -94,7 +97,7 @@ export default function RedistributionOverviewPage() {
       {error ? (
         <Card className="p-4 border-rose-200 bg-rose-50 text-rose-600 font-medium">Error loading transfers: {error}</Card>
       ) : transfers.length === 0 ? (
-         <Card className="p-4 border-slate-200 bg-slate-50 text-slate-500 italic">No transfers located in database. (Did you run the manager_data_schema.sql script in Supabase?)</Card>
+         <Card className="p-4 border-slate-200 bg-slate-50 text-slate-500 italic text-center">No transfer activities found. Pending or historic transfers sent between branches will dynamically populate here.</Card>
       ) : null}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

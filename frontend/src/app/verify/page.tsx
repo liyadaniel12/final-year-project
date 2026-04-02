@@ -60,15 +60,37 @@ export default function VerifyProductPage() {
     }, 1000);
   };
 
-  const handleSubmitFeedback = () => {
+  const handleSubmitFeedback = async () => {
     if (!customerName.trim() || (rating === 0 && !feedbackText.trim())) return;
     
     setIsSubmittingFeedback(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmittingFeedback(false);
+    
+    try {
+      const payload = {
+        customerName: customerName,
+        rating: rating,
+        feedbackText: feedbackText,
+        productName: result?.productName || 'Unknown Product',
+        batchNumber: batchNumber || 'UNKNOWN'
+      };
+
+      const response = await fetch('http://localhost:9000/api/public/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit feedback');
+      }
+
       setFeedbackSubmitted(true);
-    }, 800);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to submit feedback. Please try again.');
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
   };
 
   const getStatusConfig = (status: FreshnessStatus) => {

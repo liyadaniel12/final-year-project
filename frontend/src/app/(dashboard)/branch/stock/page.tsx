@@ -12,7 +12,7 @@ export default function BranchStockPage() {
   const [productType, setProductType] = useState('');
   const [products, setProducts] = useState<any[]>([]);
   const [quantity, setQuantity] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
+  const [batchNumber, setBatchNumber] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState('');
@@ -52,7 +52,7 @@ export default function BranchStockPage() {
         body: JSON.stringify({
           product_id: productType,
           quantity: Number(quantity),
-          expiry_date: expiryDate
+          batch_number: batchNumber
         })
       });
 
@@ -64,7 +64,7 @@ export default function BranchStockPage() {
       setSuccess("Successfully recorded stock entry!");
       setProductType('');
       setQuantity('');
-      setExpiryDate('');
+      setBatchNumber('');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -127,9 +127,19 @@ export default function BranchStockPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Expiry Date</label>
-              <input required value={expiryDate} onChange={e => setExpiryDate(e.target.value)} type="date" className="w-full h-11 px-3 rounded-xl border border-slate-200 text-sm bg-white outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-medium" />
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Product Batch Number</label>
+              <input required value={batchNumber} onChange={e => setBatchNumber(e.target.value)} type="text" placeholder="e.g. M-1092-A" className="w-full h-11 px-3 rounded-xl border border-slate-200 text-sm bg-white outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-medium placeholder:text-slate-400" />
             </div>
+
+            {selectedProduct && (
+              <div className="space-y-1.5 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Calculated Expiry Date</label>
+                <div className="text-slate-900 font-bold">
+                  {new Date(Date.now() + (selectedProduct.shelf_life_days || 0) * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </div>
+                <div className="text-xs text-slate-500 mt-1">Based on a {selectedProduct.shelf_life_days || 0}-day predetermined shelf life</div>
+              </div>
+            )}
           </div>
 
           <div className="pt-4 flex justify-start">

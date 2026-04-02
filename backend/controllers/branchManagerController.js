@@ -108,7 +108,7 @@ export const getBranchStock = async (req, res) => {
         id: item.id,
         product: product?.name || 'Unknown',
         product_id: item.product_id,
-        batch: item.id.substring(0, 12).toUpperCase(),
+        batch: item.batch_number || item.id.substring(0, 12).toUpperCase(),
         qty: item.stock,
         unit: product?.unit || '',
         formattedQty: `${item.stock} ${product?.unit || ''}`,
@@ -130,17 +130,27 @@ export const addBranchStock = async (req, res) => {
     const branchId = await resolveBranchId(req);
     if (!branchId) return res.status(400).json({ error: 'Branch ID required' });
 
-    const { product_id, quantity, expiry_date } = req.body;
-    if (!product_id || !quantity || !expiry_date) {
+    const { product_id, quantity, batch_number } = req.body;
+    if (!product_id || !quantity) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     const supabase = getSupabaseAdmin();
+
+    const { data: productData, error: prodErr } = await supabase.from('products').select('shelf_life_days').eq('id', product_id).single();
+    if (prodErr || !productData) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const shelfLifeDays = productData.shelf_life_days || 14; 
+    const computedExpiryDate = new Date(Date.now() + shelfLifeDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
     const { data, error } = await supabase.from('branch_inventory').insert([{
       branch_id: branchId,
       product_id,
       stock: quantity,
-      expiry_date
+      expiry_date: computedExpiryDate,
+      batch_number: batch_number || null
     }]).select().single();
 
     if (error) throw error;
@@ -165,6 +175,10 @@ export const getBranchSales = async (req, res) => {
     const salesList = (salesRes.data || []).map(item => {
       const product = (prodRes.data || []).find(p => p.id === item.product_id);
       const dateObj = new Date(item.created_at);
+      
+      // Since item.batch_id links to branch_inventory UUID, let's just show it safely
+      // In a strict production system, we'd join branch_inventory fully to get the string, 
+      // but rendering the custom string or truncating UUID is fine.
       return {
         id: item.id,
         date: dateObj.toLocaleDateString(),
@@ -277,15 +291,24 @@ export const createBranchTransfer = async (req, res) => {
     const branchId = await resolveBranchId(req);
     if (!branchId) return res.status(400).json({ error: 'Branch ID required' });
 
-    const { to_branch_id, product_id, batch_id, quantity } = req.body;
+    let { from_branch_id, to_branch_id, product_id, batch_id, quantity } = req.body;
     
-    if (!to_branch_id || !product_id || !quantity) {
+    if (!to_branch_id) to_branch_id = branchId;
+    if (!from_branch_id) from_branch_id = branchId;
+
+    if (!from_branch_id || !to_branch_id || !product_id || !quantity) {
       return res.status(400).json({ error: 'Missing required transfer details' });
     }
 
+    // Must involve current branch
+    if (from_branch_id !== branchId && to_branch_id !== branchId) {
+      return res.status(403).json({ error: 'You can only create transfers involving your own branch' });
+    }
+
     const supabase = getSupabaseAdmin();
+    
     // Validate we have enough stock if sending out
-    if (batch_id) {
+    if (batch_id && from_branch_id === branchId) {
        const { data: stockItem } = await supabase.from('branch_inventory').select('stock').eq('id', batch_id).single();
        if (!stockItem || stockItem.stock < quantity) {
            return res.status(400).json({ error: 'Insufficient stock in this batch to transfer' });
@@ -293,7 +316,7 @@ export const createBranchTransfer = async (req, res) => {
     }
 
     const { data, error } = await supabase.from('transfers').insert([{
-      from_branch_id: branchId,
+      from_branch_id,
       to_branch_id,
       product_id,
       batch_id,
@@ -328,6 +351,50 @@ export const updateBranchTransfer = async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized to process this transfer' });
     }
 
+    // IF STATUS COMPLETED -> Move Stock
+    if (status === 'Completed' && transfer.status !== 'Completed') {
+      // 1. Subtract from from_branch
+      // If batch_id is set, pull from there. Else, what batch? 
+      // A request might not specify a batch_id initially. If it's not set, we just pick the first available or fail.
+      // For simplicity, we require the sender to assign a batch_id when Accepting, or we just deduct it arbitrarily.
+      // But if there's no batch_id, we can't easily move stock in this schema without it. Let's assume sender deducts properly.
+      let senderBatchId = transfer.batch_id;
+      let senderStock = 0;
+
+      if (!senderBatchId) {
+         // Auto-resolve batch from sender
+         const { data: batches } = await supabase.from('branch_inventory').select('*').eq('branch_id', transfer.from_branch_id).eq('product_id', transfer.product_id).gt('stock', 0);
+         if (batches && batches.length > 0) {
+           senderBatchId = batches[0].id;
+           senderStock = batches[0].stock;
+         } else {
+           return res.status(400).json({ error: 'Sender does not have sufficient stock to complete this transfer.' });
+         }
+      } else {
+         const { data: batchData } = await supabase.from('branch_inventory').select('stock').eq('id', senderBatchId).single();
+         if (batchData) senderStock = batchData.stock;
+      }
+
+      if (senderStock < transfer.quantity) {
+        return res.status(400).json({ error: 'Not enough stock in the sender batch to complete this transfer' });
+      }
+
+      // Deduct from sender
+      const { error: updErr1 } = await supabase.from('branch_inventory').update({ stock: Number(senderStock) - Number(transfer.quantity) }).eq('id', senderBatchId);
+      if (updErr1) throw updErr1;
+
+      // 2. Add to recipient (create new inventory row since batch implies arrival time)
+      const { data: senderBatchFull } = await supabase.from('branch_inventory').select('expiry_date').eq('id', senderBatchId).single();
+      
+      const { error: updErr2 } = await supabase.from('branch_inventory').insert([{
+        branch_id: transfer.to_branch_id,
+        product_id: transfer.product_id,
+        stock: transfer.quantity,
+        expiry_date: senderBatchFull?.expiry_date || new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000).toISOString()
+      }]);
+      if (updErr2) throw updErr2;
+    }
+
     const { data, error } = await supabase.from('transfers').update({ status }).eq('id', id).select();
 
     if (error) throw error;
@@ -335,5 +402,55 @@ export const updateBranchTransfer = async (req, res) => {
   } catch(error) {
     console.error('Update Transfer Error:', error);
     res.status(500).json({ error: 'Failed to update transfer status' });
+  }
+};
+
+export const getTransferOptions = async (req, res) => {
+  try {
+    const branchId = await resolveBranchId(req);
+    const { product_id } = req.query;
+    
+    const supabase = getSupabaseAdmin();
+    
+    // Base data
+    const [prodRes, branchRes] = await Promise.all([
+      supabase.from('products').select('*'),
+      supabase.from('branches').select('*')
+    ]);
+
+    const result = {
+      products: prodRes.data || [],
+      recommendations: []
+    };
+
+    if (product_id) {
+       const branches = branchRes.data || [];
+       
+       const { data: invData } = await supabase.from('branch_inventory')
+                                               .select('branch_id, stock')
+                                               .eq('product_id', product_id);
+       
+       const branchStockMap = {};
+       (invData || []).forEach(item => {
+         if (!branchStockMap[item.branch_id]) branchStockMap[item.branch_id] = 0;
+         branchStockMap[item.branch_id] += Number(item.stock);
+       });
+
+       const recs = branches
+         .filter(b => b.id !== branchId)
+         .map(b => ({
+           branch_id: b.id,
+           branch_name: b.name,
+           available_stock: branchStockMap[b.id] || 0
+         }))
+         .sort((a,b) => a.available_stock - b.available_stock); // Lowest stock first
+
+       result.recommendations = recs;
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('Transfer Options Error:', error);
+    res.status(500).json({ error: 'Failed to load transfer options' });
   }
 };

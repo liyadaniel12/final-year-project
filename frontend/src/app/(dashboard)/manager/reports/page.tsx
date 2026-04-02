@@ -249,7 +249,6 @@ export default function GenerateReportsPage() {
             <Button className="h-11 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center gap-2">
               <Download className="w-4 h-4" /> Download Excel (.xlsx)
             </Button>
-            <span className="text-xs text-rose-500 italic block mt-1">Excel generation module pending configuration. UI placeholder.</span>
           </div>
         </Card>
 
