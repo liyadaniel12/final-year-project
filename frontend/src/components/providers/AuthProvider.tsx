@@ -23,7 +23,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  logout: async () => { },
+  logout: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -44,41 +44,91 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .single();
 
         if (error) {
+          // Check for network errors (TypeError: Failed to fetch)
+          if (error.message?.includes('Failed to fetch') || error.message?.includes('fetch failed')) {
+            console.error('Network Error: Could not connect to Supabase. Using degraded mode.');
+            // Return a minimal profile from session metadata if available
+            return { id: userId, network_error: true } as any;
+          }
           console.error('Error fetching profile:', error.message || JSON.stringify(error));
           return null;
         }
         return data as UserProfile;
-      } catch (err) {
+      } catch (err: any) {
+        if (err.message?.includes('Failed to fetch')) {
+           return { id: userId, network_error: true } as any;
+        }
         console.error('Unexpected error fetching profile', err);
         return null;
       }
     };
 
     const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setUser(profile);
-      } else {
+        if (error) {
+          // Stale or invalid refresh token — clear it so the user gets a clean state
+          console.warn('Session error (clearing stored session):', error.message);
+          await supabase.auth.signOut();
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        if (session?.user) {
+          const profile = await fetchProfile(session.user.id);
+          setUser(profile);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.warn('Unexpected error during auth initialization, clearing session:', err);
+        await supabase.auth.signOut();
         setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        setLoading(true);
-        const profile = await fetchProfile(session.user.id);
-        setUser(profile);
-        setLoading(false);
-      } else {
-        setUser(null);
-        setLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        // Gracefully handle token refresh failures and explicit sign-outs
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        // TOKEN_REFRESHED fires when the client refreshes silently — only re-fetch
+        // profile on the first SIGNED_IN or USER_UPDATED events
+        if (event === 'TOKEN_REFRESHED') {
+          // Session refresh succeeded — nothing to do unless user is null
+          if (!session?.user) {
+            setUser(null);
+            setLoading(false);
+          }
+          return;
+        }
+
+        if (session?.user) {
+          setLoading(true);
+          const profile = await fetchProfile(session.user.id);
+          // If profile fetch failed due to network, we can still use the session user id
+          if (profile) {
+            setUser(profile);
+          } else {
+             setUser(null);
+          }
+          setLoading(false);
+        } else {
+          setUser(null);
+          setLoading(false);
+        }
       }
-    });
+    );
 
     return () => {
       subscription.unsubscribe();
@@ -91,21 +141,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const publicRoutes = ['/login', '/', '/forgot-password', '/verify', '/feedback'];
     const isPublicRoute = publicRoutes.includes(pathname);
 
-    // Redirect if not logged in
+    // Redirect unauthenticated users away from protected routes
     if (!user && !isPublicRoute) {
       router.push('/login');
       return;
     }
 
-    // Redirect to respective dashboard if logged in and trying to access /login or root
+    // Redirect authenticated users away from login/root to their dashboard
     if (user && (pathname === '/login' || pathname === '/')) {
       if (user.role === 'admin') router.push('/admin');
       else if (user.role === 'main_manager') router.push('/manager');
       else if (user.role === 'branch_manager') router.push('/branch');
-      else router.push('/login'); // Fallback if role missing
+      else router.push('/login');
     }
 
-    // Additional simple role protection
+    // Simple role protection for admin routes
     if (user && pathname.startsWith('/admin') && user.role !== 'admin') {
       router.push('/');
     }
@@ -118,6 +168,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, loading, logout }}>
+      {user && (user as any).network_error && (
+        <div className="bg-amber-600 text-white px-4 py-2 text-center text-sm font-bold shadow-lg animate-pulse z-[9999] sticky top-0">
+          ⚠️ Network Connectivity Issue: Running in degraded mode. Some features may be unavailable.
+        </div>
+      )}
       {children}
     </AuthContext.Provider>
   );

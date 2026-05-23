@@ -1,262 +1,239 @@
+// app/admin/products/page.tsx - CLEAN VERSION
+
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Modal } from '@/components/ui/Modal';
-import { supabase } from '@/lib/supabaseClient';
-import { Edit2, Trash2, Tag, Box, Info } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
-import { useRouter } from 'next/navigation';
+// FIXED PRODUCT DATA - ONLY 4 PRODUCTS
+const FIXED_PRODUCTS = [
+  { 
+    id: '1', 
+    name: 'fresh_milk', 
+    displayName: 'Fresh Milk', 
+    image: '/images/milk.jpg',
+    unit: 'Liters (L)', 
+    shelfLifeDays: 1, 
+    shelfLifeText: '1 day',
+    isActive: true,
+    order: 1
+  },
+  { 
+    id: '2', 
+    name: 'yogurt', 
+    displayName: 'Yogurt', 
+    image: '/images/yogurt.jpg',
+    unit: 'Grams (g)', 
+    shelfLifeDays: 7, 
+    shelfLifeText: '7 days',
+    isActive: true,
+    order: 2
+  },
+  { 
+    id: '3', 
+    name: 'cheese', 
+    displayName: 'Cheese', 
+    image: '/images/cheese.jpg',
+    unit: 'Grams (g)', 
+    shelfLifeDays: 60, 
+    shelfLifeText: '60 days',
+    isActive: true,
+    order: 3
+  },
+  { 
+    id: '4', 
+    name: 'butter', 
+    displayName: 'Butter', 
+    image: '/images/butter.jpg',
+    unit: 'Kilograms (kg)', 
+    shelfLifeDays: 90, 
+    shelfLifeText: '90 days',
+    isActive: true,
+    order: 4
+  },
+];
 
-export default function ProductManagementPage() {
-  const router = useRouter();
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [submitLoading, setSubmitLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+export default function AdminProductsPage() {
+  const [products, setProducts] = useState(FIXED_PRODUCTS);
+  const [loading, setLoading] = useState(false);
 
-  // Form State
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: '', description: '', price: '', stock: '', category: '', unit: '' });
+  // Sort by shelfLifeDays (1, 7, 60, 90)
+  const sortedProducts = [...products].sort((a, b) => a.shelfLifeDays - b.shelfLifeDays);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
+  const handleToggle = async (productId: string) => {
     setLoading(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch('http://localhost:9000/api/products', {
-        headers: { 'Authorization': `Bearer ${session?.access_token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setProducts(data.products || []);
-      }
-    } catch (err) {
-      console.error('Error fetching products:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const CATEGORY_STYLES: Record<string, string> = {
-    'Milk': 'bg-blue-50 text-blue-700 border-blue-200',
-    'Yogurt': 'bg-pink-50 text-pink-700 border-pink-200',
-    'Cheese': 'bg-amber-50 text-amber-700 border-amber-200',
-    'Butter': 'bg-yellow-50 text-yellow-700 border-yellow-200'
-  };
-
-  const getCategoryBadge = (category: string) => {
-    // Normalize to sentence case for matching if needed
-    const normalized = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
-    const classes = CATEGORY_STYLES[normalized] || 'bg-slate-50 text-slate-700 border-slate-200';
-    return (
-      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${classes}`}>
-        {category}
-      </span>
+    setProducts(prev => 
+      prev.map(p => 
+        p.id === productId 
+          ? { ...p, isActive: !p.isActive }
+          : p
+      )
     );
+    setLoading(false);
   };
-
-  const handleCreateProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitLoading(true);
-    setMessage(null);
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const url = isEditMode && editingId 
-         ? `http://localhost:9000/api/products/${editingId}`
-         : 'http://localhost:9000/api/products';
-      
-      const method = isEditMode ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ 
-          ...form, 
-          price: parseFloat(form.price), 
-          stock: parseInt(form.stock) 
-        })
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setIsModalOpen(false);
-        setForm({ name: '', description: '', price: '', stock: '', category: '', unit: '' });
-        setIsEditMode(false);
-        setEditingId(null);
-        fetchProducts();
-      } else {
-        setMessage({ type: 'error', text: data.error || 'Failed to save product' });
-      }
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'An error occurred' });
-    } finally {
-      setSubmitLoading(false);
-    }
-  };
-
-  const handleDeleteProduct = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`http://localhost:9000/api/products/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${session?.access_token}` }
-      });
-      if (res.ok) fetchProducts();
-    } catch (err) {
-      console.error('Error deleting product:', err);
-    }
-  };
-
-  // Deprecated since we use explicit new page
-  const openCreateModal = () => {
-    router.push('/admin/products/new');
-  };
-
-  const openEditModal = (product: any) => {
-    setForm({ 
-      name: product.name, 
-      description: product.description || '', 
-      price: product.price.toString(), 
-      stock: product.stock.toString(), 
-      category: product.category || '',
-      unit: product.unit || ''
-    });
-    setIsEditMode(true);
-    setEditingId(product.id);
-    setMessage(null);
-    setIsModalOpen(true);
-  };
-
-  // Fixed top cards based on requirements
-  const productCategories = [
-    { label: 'Milk', unit: 'L', style: CATEGORY_STYLES['Milk'] },
-    { label: 'Yogurt', unit: 'g', style: CATEGORY_STYLES['Yogurt'] },
-    { label: 'Cheese', unit: 'kg', style: CATEGORY_STYLES['Cheese'] },
-    { label: 'Butter', unit: 'kg', style: CATEGORY_STYLES['Butter'] }
-  ];
 
   return (
-    <div className="space-y-8 pb-10">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Product Management</h1>
-          <p className="text-slate-500 mt-1 font-medium">{products.length} product types — all internally produced</p>
-        </div>
-        <Button onClick={openCreateModal} variant="secondary" className="rounded-xl px-6 h-12 shadow-sm">
-          + Add Product
-        </Button>
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-800">Product Management</h1>
+        <p className="text-gray-500 text-sm mt-1">
+          4 registered product types — fixed shelf life values
+        </p>
       </div>
 
-      {/* Category Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {productCategories.map((cat) => (
-          <Card key={cat.label} className="rounded-3xl shadow-sm border border-slate-100 overflow-hidden bg-white hover:shadow-md transition-shadow">
-            <div className={`h-2 w-full ${cat.style?.split(' ')[0] || 'bg-slate-200'}`} />
-            <div className="p-5">
-              <div className="flex justify-between items-start mb-3">
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${cat.style}`}>
-                  {cat.label}
+      {/* PRODUCT CARDS - GRID LAYOUT (4 cards in a row) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+        {sortedProducts.map((product) => (
+          <div
+            key={product.id}
+            className={`rounded-xl p-5 shadow-md border transition-all ${
+              product.isActive 
+                ? 'bg-white border-gray-200 hover:shadow-lg' 
+                : 'bg-gray-50 border-gray-200 opacity-60'
+            }`}
+          >
+            <div className="text-center">
+              {/* Product Image */}
+              <div className="w-24 h-24 mx-auto mb-4 bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center">
+                <img src={product.image} alt={product.displayName} className="w-full h-full object-cover" />
+              </div>
+              
+              {/* Product Name */}
+              <h3 className="font-bold text-xl text-gray-800">
+                {product.displayName}
+              </h3>
+              
+              {/* Unit */}
+              <p className="text-sm text-gray-500 mt-1">{product.unit}</p>
+              
+              {/* Shelf Life - Highlight Fresh Milk */}
+              <p className={`text-2xl font-bold mt-3 ${
+                product.shelfLifeDays === 1 ? 'text-red-600' : 'text-gray-700'
+              }`}>
+                {product.shelfLifeText}
+              </p>
+              
+              {/* Fixed Badge */}
+              <div className="mt-3">
+                <span className="text-xs text-gray-400">🔒 Fixed Shelf Life</span>
+              </div>
+              
+              {/* Status Dot - NO BUTTON HERE */}
+              <div className="mt-4">
+                <span className={`inline-flex items-center gap-1.5 text-sm ${
+                  product.isActive ? 'text-green-600' : 'text-red-500'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${
+                    product.isActive ? 'bg-green-600' : 'bg-red-500'
+                  }`}></span>
+                  {product.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
-              <div className="flex items-center text-slate-900 font-bold text-lg mb-1">
-                Unit: {cat.unit}
-              </div>
-              <p className="text-sm text-slate-500 font-medium">Internally produced</p>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
 
-      {/* Table */}
-      <Card className="rounded-3xl shadow-sm border border-slate-100 bg-white">
-        <div className="overflow-x-auto">
-          {loading ? (
-             <div className="text-sm text-slate-500 p-12 text-center animate-pulse">Loading products...</div>
-          ) : products.length === 0 ? (
-             <div className="text-center p-12">
-               <p className="text-slate-500">No products found. Add one above.</p>
-             </div>
-          ) : (
-            <table className="w-full text-sm text-left whitespace-nowrap">
-              <thead className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider bg-slate-50 border-b border-slate-100">
-                <tr>
-                  <th className="px-6 py-5 rounded-tl-3xl">Product Name</th>
-                  <th className="px-6 py-5">Category</th>
-                  <th className="px-6 py-5">Unit</th>
-                  <th className="px-6 py-5">Shelf Life</th>
-                  <th className="px-6 py-5">Description</th>
-                  <th className="px-6 py-5 text-right rounded-tr-3xl">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((p) => (
-                  <tr key={p.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-5">
-                      <div className="font-bold text-slate-900">{p.name}</div>
-                    </td>
-                    <td className="px-6 py-5">
-                      {getCategoryBadge(p.category || 'Uncategorized')}
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded-md text-xs">{p.unit || 'unit'}</span>
-                    </td>
-                    <td className="px-6 py-5 text-slate-600 font-medium">
-                      {p.shelf_life_days ? `${p.shelf_life_days} days` : '14 days'}
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="text-slate-500 font-medium truncate max-w-[200px] inline-block">{p.description || '-'}</span>
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => openEditModal(p)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors" aria-label="Edit Product">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleDeleteProduct(p.id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors" aria-label="Delete Product">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+      {/* PRODUCT TABLE - WITH TOGGLE BUTTONS */}
+      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="px-6 py-4 bg-gray-50 border-b">
+          <h3 className="font-semibold text-gray-700">Product Registry</h3>
+          <p className="text-xs text-gray-500 mt-1">
+            Manage product status below. Toggle to activate/deactivate products system-wide.
+          </p>
         </div>
-      </Card>
+        
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Product
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Unit
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Shelf Life
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {sortedProducts.map((product) => (
+              <tr key={product.id} className={!product.isActive ? 'bg-gray-50' : ''}>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 shadow-sm shrink-0">
+                      <img src={product.image} alt={product.displayName} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-900">{product.displayName}</div>
+                      <div className="text-xs text-gray-500">{product.name}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-gray-600">{product.unit}</td>
+                <td className="px-6 py-4">
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-sm font-mono ${
+                    product.shelfLifeDays === 1 
+                      ? 'bg-red-100 text-red-700 font-bold' 
+                      : 'bg-gray-100 text-gray-700'
+                  }`}>
+                    {product.shelfLifeText}
+                    <span className="text-xs text-gray-400 ml-1">(FIXED)</span>
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${
+                    product.isActive 
+                      ? 'bg-green-100 text-green-700' 
+                      : 'bg-red-100 text-red-700'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      product.isActive ? 'bg-green-600' : 'bg-red-600'
+                    }`}></span>
+                    {product.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => handleToggle(product.id)}
+                    disabled={loading}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      product.isActive
+                        ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
+                        : 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-200'
+                    }`}
+                  >
+                    {product.isActive ? 'Deactivate' : 'Activate'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditMode ? "Edit Product" : "Register New Product"}>
-        <form onSubmit={handleCreateProduct} className="space-y-4 pt-2">
-          {message && <div className={`p-3 rounded-xl text-sm ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{message.text}</div>}
-          <Input label="Product Name" type="text" required value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} className="rounded-xl" />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Category (Milk, Yogurt, etc)" type="text" required value={form.category} onChange={(e) => setForm({...form, category: e.target.value})} className="rounded-xl" />
-            <Input label="Unit (L, g, kg)" type="text" required value={form.unit} onChange={(e) => setForm({...form, unit: e.target.value})} className="rounded-xl" />
+      {/* INFO BANNER */}
+      <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-100">
+        <div className="flex items-start gap-3">
+          <span className="text-lg">ℹ️</span>
+          <div className="text-sm text-blue-800">
+            <p className="font-medium">About Product Management</p>
+            <p className="text-blue-700 mt-1">
+              • <strong>Active</strong> products appear in stock recording, sales, and redistribution forms.<br />
+              • <strong>Inactive</strong> products are hidden system-wide and cannot be used.<br />
+              • Shelf life values are <strong>fixed</strong> and cannot be changed for data integrity.<br />
+              • Fresh Milk has <strong>1 day</strong> shelf life - must be sold on production day.
+            </p>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Global Price ($)" type="number" step="0.01" required value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} className="rounded-xl" />
-            <Input label="Initial Stock" type="number" required value={form.stock} onChange={(e) => setForm({...form, stock: e.target.value})} className="rounded-xl" />
-          </div>
-
-          <Input label="Description" type="text" value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} className="rounded-xl" />
-          
-          <Button type="submit" disabled={submitLoading} className="w-full mt-8 h-12 rounded-xl shadow-sm text-sm font-bold border-0" variant="secondary">
-            {submitLoading ? 'Saving...' : (isEditMode ? 'Update Product' : 'Create Product')}
-          </Button>
-        </form>
-      </Modal>
+        </div>
+      </div>
     </div>
   );
-}
+} 

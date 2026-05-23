@@ -86,7 +86,7 @@ export default function BranchExpiryOverviewPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="rounded-2xl shadow-sm border border-emerald-100 bg-emerald-50/30 p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
+        <Card className="rounded-2xl shadow-sm border border-emerald-100 bg-emerald-50 p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
           <div className="absolute -right-6 -top-6 text-emerald-100"><CheckCircle className="w-32 h-32" /></div>
           <div className="relative z-10 space-y-2">
             <h3 className="text-emerald-800 font-bold text-lg">Fresh (Green)</h3>
@@ -98,7 +98,7 @@ export default function BranchExpiryOverviewPage() {
           </div>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm border border-amber-100 bg-amber-50/30 p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
+        <Card className="rounded-2xl shadow-sm border border-amber-100 bg-amber-50 p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
           <div className="absolute -right-6 -top-6 text-amber-100"><AlertTriangle className="w-32 h-32" /></div>
           <div className="relative z-10 space-y-2">
             <h3 className="text-amber-800 font-bold text-lg">Near Expiry (Yellow)</h3>
@@ -110,7 +110,7 @@ export default function BranchExpiryOverviewPage() {
           </div>
         </Card>
 
-        <Card className="rounded-2xl shadow-sm border border-rose-100 bg-rose-50/30 p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
+        <Card className="rounded-2xl shadow-sm border border-rose-100 bg-rose-50 p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
           <div className="absolute -right-6 -top-6 text-rose-100"><XCircle className="w-32 h-32" /></div>
           <div className="relative z-10 space-y-2">
             <h3 className="text-rose-800 font-bold text-lg">Expired (Red)</h3>
@@ -124,7 +124,7 @@ export default function BranchExpiryOverviewPage() {
       </div>
 
       <Card className="rounded-2xl shadow-sm border border-slate-100 bg-white overflow-hidden">
-        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-wrap gap-4 items-center justify-between">
+        <div className="p-5 border-b border-slate-100 bg-slate-50 flex flex-wrap gap-4 items-center justify-between">
           <div className="flex flex-wrap gap-3 items-center flex-1">
             <div className="relative max-w-sm w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -155,7 +155,7 @@ export default function BranchExpiryOverviewPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredExpiry.map((item) => (
-                <tr key={item.id} className="bg-white hover:bg-slate-50/80 transition-colors">
+                <tr key={item.id} className="bg-white hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4 font-bold text-slate-900">{item.product}</td>
                   <td className="px-6 py-4 font-mono text-xs text-slate-500">{item.batch}</td>
                   <td className="px-6 py-4 font-medium text-slate-900">{item.formattedQty}</td>

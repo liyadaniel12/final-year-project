@@ -272,10 +272,11 @@ export const getBranchTransfers = async (req, res) => {
         from: fromBranch?.name || 'Unknown',
         to: toBranch?.name || 'Unknown',
         product: product?.name || 'Unknown',
-        batch: item.batch_id ? item.batch_id.substring(0, 12).toUpperCase() : 'N/A',
+        batch: item.batch_id ? String(item.batch_id).substring(0, 12).toUpperCase() : 'N/A',
         qty: item.quantity,
         formattedQty: `${item.quantity} ${product?.unit || ''}`,
-        status: item.status
+        status: item.status,
+        created_at: item.created_at
       };
     });
 

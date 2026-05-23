@@ -36,11 +36,41 @@ export const lookupBatch = async (req, res) => {
 
     if (error) {
       console.error('Database error on lookup:', error);
-      return res.status(500).json({ error: 'Database error' });
+      return res.status(500).json({ error: `Database error: ${error.message || 'Unknown'}` });
     }
 
     if (!inventoryItem) {
       return res.json({ exists: false, message: 'Batch number not found' });
+    }
+
+    // Check if product is active (status column may or may not exist)
+    let isActive = true;
+    if (inventoryItem.product_id) {
+      try {
+        const { data: productData, error: statusError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', inventoryItem.product_id)
+          .single();
+        
+        if (!statusError && productData?.status === 'Inactive') {
+          isActive = false;
+        }
+      } catch (e) {
+        // status column may not exist — default to active
+      }
+    }
+
+    if (!isActive) {
+      return res.json({
+        exists: true,
+        discontinued: true,
+        message: 'This product has been discontinued and is no longer available.',
+        batch: {
+          batchNumber: inventoryItem.batch_number,
+          productName: inventoryItem.products?.name || 'Unknown Product',
+        }
+      });
     }
 
     // Compute days left and status
@@ -66,13 +96,12 @@ export const lookupBatch = async (req, res) => {
       quantity: inventoryItem.stock,
       unit: inventoryItem.products?.unit || 'unit',
       expiryDate: inventoryItem.expiry_date,
-      // Since `production_date` isn't in branch_inventory, we'll estimate or just provide what we have.
       productionDate: new Date(expiryDate.getTime() - (30 * 24 * 60 * 60 * 1000)).toISOString(), 
       daysLeft,
       status,
       branchId: inventoryItem.branches?.id,
       branchName: inventoryItem.branches?.name,
-      isActive: true, // simplified
+      isActive: true,
     };
 
     return res.json({

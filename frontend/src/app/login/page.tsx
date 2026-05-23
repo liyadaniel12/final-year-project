@@ -46,7 +46,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 font-sans selection:bg-teal-100 selection:text-teal-900 relative">
+    <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 font-sans selection:bg-teal-100 selection:text-teal-900 relative">
       <Link href="/" className="absolute top-6 left-4 sm:left-6 md:top-8 md:left-8 flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors font-medium text-sm bg-white hover:bg-slate-50 px-4 py-2.5 rounded-xl shadow-[0_2px_8px_rgb(0,0,0,0.04)] border border-slate-100 z-10">
         <ArrowLeft className="w-4 h-4" />
         Back to Home

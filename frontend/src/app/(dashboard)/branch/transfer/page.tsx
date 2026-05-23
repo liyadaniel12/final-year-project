@@ -36,7 +36,11 @@ export default function BranchTransferPage() {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
 
-      if (!response.ok) throw new Error('Failed to fetch transfers');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Failed to fetch transfers: ${response.status}`);
+      }
+      
       const jsonData = await response.json();
       setTransfers(jsonData.transfers || []);
 

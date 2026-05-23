@@ -3,7 +3,7 @@ import { LogIn, Package, Timer, ArrowRightLeft } from 'lucide-react';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden">
+    <div className="min-h-screen bg-transparent flex flex-col font-sans text-slate-900 selection:bg-teal-100 selection:text-teal-900 overflow-x-hidden">
       
       {/* Navigation / Header Area */}
       <nav className="w-full p-4 sm:p-6 flex items-center justify-between mx-auto max-w-7xl">

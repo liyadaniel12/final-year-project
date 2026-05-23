@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Package, AlertTriangle, CheckCircle, AlertOctagon, Truck, ArrowRight, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
+import ExpiryAlertCard from '@/components/ExpiryAlertCard';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/components/providers/AuthProvider';
 
@@ -76,7 +77,7 @@ export default function BranchDashboardPage() {
           </div>
         </Card>
 
-        <Card className={`rounded-2xl p-6 shadow-sm flex justify-between items-center cursor-default transition-colors ${data?.expiredCount > 0 ? 'border-rose-200 bg-rose-50/50 hover:border-rose-300' : 'border-amber-200 bg-amber-50/50 hover:border-amber-300'}`}>
+        <Card className={`rounded-2xl p-6 shadow-sm flex justify-between items-center cursor-default transition-colors ${data?.expiredCount > 0 ? 'border-rose-200 bg-rose-50 hover:border-rose-300' : 'border-amber-200 bg-amber-50 hover:border-amber-300'}`}>
           <div>
             <div className={`flex items-center gap-2 mb-1 ${data?.expiredCount > 0 ? 'text-rose-600' : 'text-amber-600'}`}>
               <AlertTriangle className="w-5 h-5" />
@@ -129,12 +130,12 @@ export default function BranchDashboardPage() {
 
       {/* Active Alerts */}
       {data?.criticalAlerts && data.criticalAlerts.length > 0 && (
-        <Card className="rounded-2xl shadow-sm border border-rose-200 bg-rose-50 overflow-hidden">
+        <Card className="rounded-2xl shadow-sm border border-rose-200 bg-white overflow-hidden">
           <div className="px-5 py-3 border-b border-rose-100 flex items-center gap-2 text-rose-800">
             <AlertOctagon className="w-5 h-5" />
             <h2 className="font-bold text-sm uppercase tracking-wider">Active Alerts</h2>
           </div>
-          <div className="p-4 bg-white/60 space-y-3">
+          <div className="p-4 bg-white space-y-3">
             {data.criticalAlerts.map((alert: any) => (
               <div key={alert.id} className="flex gap-4 p-4 rounded-xl bg-white border border-rose-100 shadow-sm">
                 <div className="p-2.5 rounded-full bg-rose-50 text-rose-500 h-fit">

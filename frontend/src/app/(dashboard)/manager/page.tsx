@@ -84,7 +84,7 @@ export default function ManagerDashboard() {
 
       {/* Critical Alerts */}
       {data.criticalAlerts && data.criticalAlerts.length > 0 && (
-        <Card className="rounded-2xl border border-rose-200 bg-rose-50/50 overflow-hidden shadow-sm">
+        <Card className="rounded-2xl border border-rose-200 bg-rose-50 overflow-hidden shadow-sm">
           <div className="bg-rose-500 px-4 py-2 flex items-center gap-2 text-white font-bold text-sm">
             <AlertOctagon className="w-4 h-4" />
             {data.criticalAlerts.length} Critical Alerts — Immediate Action Required
@@ -138,7 +138,7 @@ export default function ManagerDashboard() {
           <p className="text-xs text-slate-500 mt-1 font-medium text-amber-600">30 days remaining</p>
         </Card>
 
-        <Card className="rounded-2xl p-5 border border-slate-100 shadow-sm hover:border-slate-200 transition-colors text-rose-900 bg-rose-50/30 border-rose-100">
+        <Card className="rounded-2xl p-5 border border-slate-100 shadow-sm hover:border-slate-200 transition-colors text-rose-900 bg-rose-50 border-rose-100">
           <div className="flex items-center gap-3 text-rose-600 mb-2">
             <XCircle className="w-5 h-5" />
             <span className="text-xs font-bold uppercase tracking-wider">Expired Products</span>
@@ -259,7 +259,7 @@ export default function ManagerDashboard() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {data.branchPerformance && data.branchPerformance.map((row: any) => (
-                <tr key={row.id} className="bg-white hover:bg-slate-50/50">
+                <tr key={row.id} className="bg-white hover:bg-slate-50">
                   <td className="px-6 py-4">
                     <div className="font-bold text-slate-900">{row.branch}</div>
                     <div className="text-xs text-slate-500 font-medium">{row.manager}</div>
