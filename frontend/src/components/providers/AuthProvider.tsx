@@ -35,6 +35,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchProfile = async (userId: string) => {
       try {
         const { data, error } = await supabase
@@ -55,32 +57,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
 
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
-        setUser(profile);
-      } else {
-        setUser(null);
+        if (session?.user) {
+          const profile = await fetchProfile(session.user.id);
+          if (mounted) setUser(profile);
+        } else {
+          if (mounted) setUser(null);
+        }
+      } catch (error: any) {
+        // Ignore lock stolen errors in dev mode
+        if (error?.message?.includes('Lock') && error?.message?.includes('stole it')) {
+          console.warn('Supabase lock error ignored:', error.message);
+        } else {
+          console.error('Session error:', error);
+        }
+      } finally {
+        if (mounted) setLoading(false);
       }
-      setLoading(false);
     };
 
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      if (event === 'INITIAL_SESSION') return; // Handled by initializeAuth
+
       if (session?.user) {
         setLoading(true);
         const profile = await fetchProfile(session.user.id);
-        setUser(profile);
-        setLoading(false);
+        if (mounted) {
+          setUser(profile);
+          setLoading(false);
+        }
       } else {
-        setUser(null);
-        setLoading(false);
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
       }
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);

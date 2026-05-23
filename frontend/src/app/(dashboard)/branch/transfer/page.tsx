@@ -76,10 +76,14 @@ export default function BranchTransferPage() {
         },
         body: JSON.stringify({ status })
       });
-      if (!response.ok) throw new Error('Update failed');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Update failed');
+      }
       await fetchTransfers();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert(err.message);
     } finally {
       setActionLoading(null);
     }

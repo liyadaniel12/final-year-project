@@ -85,11 +85,13 @@ export const getManagerDashboard = async (req, res) => {
     }
 
     // Fetch all required data for dashboard
-    const [branchesRes, productsRes, inventoryRes, branchManagersRes, salesRes, transfersRes] = await Promise.all([
+    const [branchesRes, productsRes, inventoryRes, branchManagersRes, salesRes, transfersRes, criticalFeedbacksRes] = await Promise.all([
       supabase.from('branches').select('*'),
       supabase.from('products').select('*'),
       supabase.from('branch_inventory').select('*'),
       supabase.from('profiles').select('id, full_name, email, branch_id').eq('role', 'branch_manager'),
+      supabase.from('sales').select('created_at'),
+      supabase.from('transfers').select('status'),
       supabase.from('customer_feedbacks').select('*').eq('is_critical', true)
     ]);
 
@@ -97,6 +99,8 @@ export const getManagerDashboard = async (req, res) => {
     const products = productsRes.data || [];
     const inventory = inventoryRes.data || [];
     const branchManagers = branchManagersRes.data || [];
+    const sales = salesRes.data || [];
+    const transfers = transfersRes.data || [];
     const criticalFeedbacks = criticalFeedbacksRes.data || [];
 
     // Helper functions for dates

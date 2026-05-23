@@ -38,7 +38,7 @@ export function Sidebar() {
           { href: '/branch/stock', label: 'Stock', icon: Package },
           { href: '/branch/sales', label: 'Sales', icon: LineChart },
           { href: '/branch/expiry', label: 'Expiry', icon: AlertTriangle },
-          { href: '/branch/transfer', label: 'Transfer', icon: ArrowRightLeft },
+          { href: '/branch/redistribution', label: 'Redistribution', icon: ArrowRightLeft },
         ];
       default:
         return [];
