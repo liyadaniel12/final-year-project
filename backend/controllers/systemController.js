@@ -85,13 +85,14 @@ export const getManagerDashboard = async (req, res) => {
     }
 
     // Fetch all required data for dashboard
-    const [branchesRes, productsRes, inventoryRes, branchManagersRes, salesRes, transfersRes, criticalFeedbacksRes] = await Promise.all([
+    const [branchesRes, productsRes, inventoryRes, branchManagersRes, criticalFeedbacksRes, salesRes, transfersRes, legacyCustomerFeedbacksRes] = await Promise.all([
       supabase.from('branches').select('*'),
       supabase.from('products').select('*'),
       supabase.from('branch_inventory').select('*'),
       supabase.from('profiles').select('id, full_name, email, branch_id').eq('role', 'branch_manager'),
-      supabase.from('sales').select('created_at'),
-      supabase.from('transfers').select('status'),
+      supabase.from('feedback').select('*').order('created_at', { ascending: false }).limit(50),
+      supabase.from('sales').select('*'),
+      supabase.from('transfers').select('*'),
       supabase.from('customer_feedbacks').select('*').eq('is_critical', true)
     ]);
 
@@ -99,9 +100,10 @@ export const getManagerDashboard = async (req, res) => {
     const products = productsRes.data || [];
     const inventory = inventoryRes.data || [];
     const branchManagers = branchManagersRes.data || [];
+    const criticalFeedbacks = criticalFeedbacksRes.data || [];
     const sales = salesRes.data || [];
     const transfers = transfersRes.data || [];
-    const criticalFeedbacks = criticalFeedbacksRes.data || [];
+    const legacyCustomerFeedbacks = legacyCustomerFeedbacksRes.data || [];
 
     // Helper functions for dates
     const now = new Date();
@@ -190,16 +192,15 @@ export const getManagerDashboard = async (req, res) => {
       }
     });
 
-    criticalFeedbacks.forEach(cf => {
-      // For branch name, we might just have the text literal 'Main Branch' from dropdown instead of a UUID if the user stores the text directly.
-      const branchObj = branches.find(b => b.id === cf.branch_id);
-      const branchName = branchObj ? branchObj.name : cf.branch_id; // Handles text like 'Main Branch'
+    // Filter critical feedback (rating <= 2) from the feedback table
+    const criticalOnly = criticalFeedbacks.filter(cf => cf.rating && cf.rating <= 2);
+    criticalOnly.forEach(cf => {
       criticalAlerts.push({
         id: `crit-feedback-${cf.id}`,
         type: 'customer_feedback',
         batch: cf.batch_number || 'Unknown',
-        branchName: branchName || 'Unknown Branch',
-        message: cf.feedback_text || 'Urgent Customer Report',
+        branchName: 'Customer Report',
+        message: cf.message || 'Urgent Customer Report',
         date: cf.created_at
       });
     });

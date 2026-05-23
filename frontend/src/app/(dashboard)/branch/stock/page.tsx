@@ -23,7 +23,7 @@ export default function BranchStockPage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('http://localhost:9000/api/products');
+        const response = await fetch('http://localhost:9000/api/products?active_only=true');
         const json = await response.json();
         setProducts(json.products || []);
       } catch (err) {

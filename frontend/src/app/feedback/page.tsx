@@ -144,7 +144,7 @@ export default function CustomerFeedbackPage() {
 
   if (submitSuccess) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
         <Card className="w-full max-w-md text-center py-12 px-6 shadow-xl border-0 rounded-2xl">
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="mx-auto flex justify-center mb-6">
             <CheckCircle className="w-20 h-20 text-green-500" />
@@ -160,7 +160,7 @@ export default function CustomerFeedbackPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-4">
       
       {/* Header */}
       <div className="w-full max-w-xl text-center mb-8">

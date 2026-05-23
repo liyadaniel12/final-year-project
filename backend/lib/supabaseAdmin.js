@@ -5,8 +5,8 @@ let supabaseAdmin = null
 export const getSupabaseAdmin = () => {
   if (!supabaseAdmin) {
     supabaseAdmin = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
+      (process.env.SUPABASE_URL || '').trim(),
+      (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
     )
   }
   return supabaseAdmin

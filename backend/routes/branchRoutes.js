@@ -1,8 +1,11 @@
 import express from 'express';
-import { getBranches, createBranch, updateBranch } from '../controllers/branchController.js';
+import { getBranches, createBranch, updateBranch, getPublicBranches } from '../controllers/branchController.js';
 import { authenticateAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Public endpoint - no auth, for customer-facing dropdowns
+router.get('/public', getPublicBranches);
 
 // Allow all authenticated users to get branches (or change to authenticateAdmin if strictly admin only)
 // Based on typical use cases, getting branches might be used by multiple roles implicitly.

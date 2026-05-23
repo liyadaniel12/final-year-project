@@ -130,3 +130,24 @@ export const updateBranch = async (req, res) => {
   }
 };
 
+// Lightweight public endpoint - no auth, just id + name for dropdowns
+export const getPublicBranches = async (req, res) => {
+  try {
+    const supabase = getSupabaseAdmin()
+    const { data: branches, error } = await supabase
+      .from('branches')
+      .select('id, name')
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching public branches:', error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.json({ branches: branches || [] });
+  } catch (error) {
+    console.error('Server error getting public branches:', error);
+    res.status(500).json({ error: 'Server error retrieving branches' });
+  }
+};
+

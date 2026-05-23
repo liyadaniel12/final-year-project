@@ -3,10 +3,19 @@ import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 export const getProducts = async (req, res) => {
   try {
     const supabase = getSupabaseAdmin()
-    const { data: products, error } = await supabase
+    const activeOnly = req.query.active_only === 'true';
+
+    let query = supabase
       .from('products')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('id', { ascending: true });
+
+    // When active_only is requested, filter out Inactive products
+    if (activeOnly) {
+      query = query.or('status.eq.Active,status.is.null');
+    }
+
+    const { data: products, error } = await query;
 
     if (error) {
       console.error('Error fetching products:', error);
@@ -21,45 +30,27 @@ export const getProducts = async (req, res) => {
 };
 
 export const createProduct = async (req, res) => {
-  try {
-    const supabase = getSupabaseAdmin()
-    const { name, description, price, stock, category, unit, shelf_life_days } = req.body;
-
-    if (!name || price === undefined || stock === undefined) {
-      return res.status(400).json({ error: 'Name, price, and stock are required' });
-    }
-
-    const { data: product, error } = await supabase
-      .from('products')
-      .insert([{ name, description, price, stock, category, unit: unit || 'unit', shelf_life_days: shelf_life_days || 14 }])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating product:', error);
-      return res.status(500).json({ error: error.message });
-    }
-
-    res.status(201).json({ message: 'Product created successfully', product });
-  } catch (error) {
-    console.error('Server error creating product:', error);
-    res.status(500).json({ error: 'Server error creating product' });
-  }
+  // Deprecated: Only 4 fixed products are allowed.
+  return res.status(403).json({ error: 'Creating new products is disabled. Shelf life is immutable and fixed.' });
 };
 
 export const updateProduct = async (req, res) => {
   try {
     const supabase = getSupabaseAdmin()
     const { id } = req.params;
-    const { name, description, price, stock, category, unit, shelf_life_days } = req.body;
+    const { status } = req.body;
 
-    if (!name || price === undefined || stock === undefined) {
-      return res.status(400).json({ error: 'Name, price, and stock are required' });
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
+
+    if (status !== 'Active' && status !== 'Inactive') {
+      return res.status(400).json({ error: 'Status must be Active or Inactive' });
     }
 
     const { data: product, error } = await supabase
       .from('products')
-      .update({ name, description, price, stock, category, unit, shelf_life_days })
+      .update({ status })
       .eq('id', id)
       .select()
       .single();
@@ -69,7 +60,7 @@ export const updateProduct = async (req, res) => {
       return res.status(500).json({ error: error.message });
     }
 
-    res.json({ message: 'Product updated successfully', product });
+    res.json({ message: 'Product status updated successfully', product });
   } catch (error) {
     console.error('Server error updating product:', error);
     res.status(500).json({ error: 'Server error updating product' });
@@ -77,23 +68,6 @@ export const updateProduct = async (req, res) => {
 };
 
 export const deleteProduct = async (req, res) => {
-  try {
-    const supabase = getSupabaseAdmin()
-    const { id } = req.params;
-
-    const { error } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting product:', error);
-      return res.status(500).json({ error: error.message });
-    }
-
-    res.json({ message: 'Product deleted successfully' });
-  } catch (error) {
-    console.error('Server error deleting product:', error);
-    res.status(500).json({ error: 'Server error deleting product' });
-  }
+  // Deprecated: Only deactivation is allowed.
+  return res.status(403).json({ error: 'Deleting products is disabled. You may only deactivate products.' });
 };
