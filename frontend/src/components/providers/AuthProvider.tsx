@@ -3,6 +3,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter, usePathname } from 'next/navigation';
+import SessionTimeout from '@/components/SessionTimeout';
+
+
 
 export type UserRole = 'admin' | 'main_manager' | 'branch_manager';
 

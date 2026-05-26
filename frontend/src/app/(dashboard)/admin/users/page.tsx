@@ -8,7 +8,7 @@ import * as z from 'zod';
 import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Edit, Trash2, Key, Check, X, Shield, MapPin, Loader2, ArrowUpDown } from 'lucide-react';
+import { Search, Edit, Trash2, Key, Check, X, Shield, MapPin, Loader2, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
 // Core UI Components
@@ -98,6 +98,7 @@ export default function UserManagementPage() {
   const [sortField, setSortField] = useState<keyof User>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [showPassword, setShowPassword] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -463,13 +464,11 @@ export default function UserManagementPage() {
                       </button>
                     </td>
                     <td className="pr-6 pl-4 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1">
                         <button onClick={() => handleOpenModal(u)} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-md hover:bg-slate-100 transition-colors" title="Edit User">
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button className="p-1.5 text-slate-400 hover:text-amber-600 rounded-md hover:bg-slate-100 transition-colors" title="Reset Password" onClick={() => toast.info('Password reset link sent to ' + u.email)}>
-                          <Key className="w-4 h-4" />
-                        </button>
+
                         <button onClick={() => { setUserToDelete(u); setIsDeleteModalOpen(true); }} className="p-1.5 text-slate-400 hover:text-rose-600 rounded-md hover:bg-slate-100 transition-colors" title="Delete User">
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -498,8 +497,23 @@ export default function UserManagementPage() {
 
           {!isEditing && (
             <div className="space-y-1">
-              <Input label="Password" type="password" {...register('password')} className="rounded-xl" placeholder="Leave blank to auto-generate" />
-              <p className="text-xs text-slate-500 flex items-center gap-1"><Shield className="w-3 h-3" /> Minimum 8 characters recommended</p>
+              <label className="text-sm font-medium text-slate-700">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  {...register('password')}
+                  className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
+                  placeholder="Leave blank to use default (1234)"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-slate-500 flex items-center gap-1"><Shield className="w-3 h-3" /> Default password: 1234</p>
             </div>
           )}
 

@@ -7,4 +7,10 @@ if (supabaseUrl === 'https://dummy-project.supabase.co') {
   console.warn('Supabase env vars are missing. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    storageKey: 'dairy-auth-token',
+    storage: typeof window !== 'undefined' ? window.sessionStorage : undefined,
+  },
+});
