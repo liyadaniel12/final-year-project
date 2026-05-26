@@ -85,14 +85,15 @@ export const getManagerDashboard = async (req, res) => {
     }
 
     // Fetch all required data for dashboard
-    const [branchesRes, productsRes, inventoryRes, branchManagersRes, criticalFeedbacksRes, salesRes, transfersRes] = await Promise.all([
+    const [branchesRes, productsRes, inventoryRes, branchManagersRes, criticalFeedbacksRes, salesRes, transfersRes, legacyCustomerFeedbacksRes] = await Promise.all([
       supabase.from('branches').select('*'),
       supabase.from('products').select('*'),
       supabase.from('branch_inventory').select('*'),
       supabase.from('profiles').select('id, full_name, email, branch_id').eq('role', 'branch_manager'),
       supabase.from('feedback').select('*').order('created_at', { ascending: false }).limit(50),
       supabase.from('sales').select('*'),
-      supabase.from('transfers').select('*')
+      supabase.from('transfers').select('*'),
+      supabase.from('customer_feedbacks').select('*').eq('is_critical', true)
     ]);
 
     const branches = branchesRes.data || [];
@@ -102,6 +103,7 @@ export const getManagerDashboard = async (req, res) => {
     const criticalFeedbacks = criticalFeedbacksRes.data || [];
     const sales = salesRes.data || [];
     const transfers = transfersRes.data || [];
+    const legacyCustomerFeedbacks = legacyCustomerFeedbacksRes.data || [];
 
     // Helper functions for dates
     const now = new Date();

@@ -38,6 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchProfile = async (userId: string) => {
       try {
         const { data, error } = await supabase
@@ -69,28 +71,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initializeAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
+        if (!mounted) return;
 
         if (error) {
           // Stale or invalid refresh token — clear it so the user gets a clean state
           console.warn('Session error (clearing stored session):', error.message);
           await supabase.auth.signOut();
-          setUser(null);
-          setLoading(false);
+          if (mounted) {
+            setUser(null);
+            setLoading(false);
+          }
           return;
         }
 
         if (session?.user) {
           const profile = await fetchProfile(session.user.id);
-          setUser(profile);
+          if (mounted) setUser(profile);
         } else {
-          setUser(null);
+          if (mounted) setUser(null);
         }
-      } catch (err) {
-        console.warn('Unexpected error during auth initialization, clearing session:', err);
-        await supabase.auth.signOut();
-        setUser(null);
+      } catch (err: any) {
+        // Ignore lock stolen errors in dev mode
+        if (err?.message?.includes('Lock') && err?.message?.includes('stole it')) {
+          console.warn('Supabase lock error ignored:', err.message);
+        } else {
+          console.warn('Unexpected error during auth initialization, clearing session:', err);
+          await supabase.auth.signOut();
+          if (mounted) setUser(null);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
@@ -98,10 +108,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        if (event === 'INITIAL_SESSION') return; // Handled by initializeAuth
+
         // Gracefully handle token refresh failures and explicit sign-outs
         if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setLoading(false);
+          if (mounted) {
+            setUser(null);
+            setLoading(false);
+          }
           return;
         }
 
@@ -110,30 +125,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (event === 'TOKEN_REFRESHED') {
           // Session refresh succeeded — nothing to do unless user is null
           if (!session?.user) {
-            setUser(null);
-            setLoading(false);
+            if (mounted) {
+              setUser(null);
+              setLoading(false);
+            }
           }
           return;
         }
 
         if (session?.user) {
-          setLoading(true);
+          if (mounted) setLoading(true);
           const profile = await fetchProfile(session.user.id);
-          // If profile fetch failed due to network, we can still use the session user id
-          if (profile) {
-            setUser(profile);
-          } else {
-             setUser(null);
+          if (mounted) {
+            // If profile fetch failed due to network, we can still use the session user id
+            if (profile) {
+              setUser(profile);
+            } else {
+               setUser(null);
+            }
+            setLoading(false);
           }
-          setLoading(false);
         } else {
-          setUser(null);
-          setLoading(false);
+          if (mounted) {
+            setUser(null);
+            setLoading(false);
+          }
         }
       }
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -141,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const publicRoutes = ['/login', '/', '/forgot-password', '/verify', '/feedback'];
+    const publicRoutes = ['/login', '/', '/forgot-password', '/reset-password', '/change-password', '/verify', '/feedback'];
     const isPublicRoute = publicRoutes.includes(pathname);
 
     // Redirect unauthenticated users away from protected routes

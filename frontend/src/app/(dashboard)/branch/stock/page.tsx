@@ -14,6 +14,8 @@ export default function BranchStockPage() {
   const [quantity, setQuantity] = useState('');
   const [batchNumber, setBatchNumber] = useState('');
   const [loading, setLoading] = useState(true);
+  const [stockHistory, setStockHistory] = useState<any[]>([]);
+  const [stockLoading, setStockLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -30,7 +32,28 @@ export default function BranchStockPage() {
         setLoading(false);
       }
     };
+    
+    const fetchStockHistory = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session?.access_token) return;
+
+        const response = await fetch('http://localhost:9000/api/branch-manager/stock', {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch stock history');
+        const jsonData = await response.json();
+        setStockHistory(jsonData.stock || []);
+      } catch (err: any) {
+        console.error(err);
+      } finally {
+        setStockLoading(false);
+      }
+    };
+
     fetchProducts();
+    fetchStockHistory();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,6 +88,22 @@ export default function BranchStockPage() {
       setProductType('');
       setQuantity('');
       setBatchNumber('');
+      
+      // Refresh stock history quietly
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          const response = await fetch('http://localhost:9000/api/branch-manager/stock', {
+            headers: { 'Authorization': `Bearer ${session.access_token}` }
+          });
+          if (response.ok) {
+            const jsonData = await response.json();
+            setStockHistory(jsonData.stock || []);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to refresh stock history', err);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -150,6 +189,53 @@ export default function BranchStockPage() {
         </form>
       </Card>
       
+      {/* Stock History View */}
+      <div className="pt-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Stock History</h2>
+            <p className="text-slate-500 mt-1">Recently recorded stock batches for your branch</p>
+          </div>
+        </div>
+
+        <Card className="rounded-2xl shadow-sm border border-slate-100 bg-white overflow-hidden">
+          {stockLoading ? (
+             <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-100">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold">Product</th>
+                    <th className="px-6 py-4 font-semibold">Batch Number</th>
+                    <th className="px-6 py-4 font-semibold">Quantity</th>
+                    <th className="px-6 py-4 font-semibold">Expiry Date</th>
+                    <th className="px-6 py-4 font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {stockHistory.length > 0 ? stockHistory.map((item) => (
+                    <tr key={item.id} className="bg-white hover:bg-slate-50/80 transition-colors">
+                      <td className="px-6 py-4 font-bold text-slate-900">{item.product}</td>
+                      <td className="px-6 py-4 font-mono text-xs text-slate-500">{item.batch}</td>
+                      <td className="px-6 py-4 font-medium text-slate-900">{item.formattedQty}</td>
+                      <td className="px-6 py-4 text-slate-600">{new Date(item.rawExpiry).toLocaleDateString()}</td>
+                      <td className="px-6 py-4">
+                        {item.status === 'Fresh' && <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800"><CheckCircle className="w-3 h-3 mr-1" /> Fresh</span>}
+                        {item.status === 'Near Expiry' && <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800"><Info className="w-3 h-3 mr-1" /> Near Expiry</span>}
+                        {item.status === 'Expired' && <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-800"><Info className="w-3 h-3 mr-1" /> Expired</span>}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan={5} className="text-center py-6 text-slate-500">No stock history found</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      </div>
+
     </div>
   );
 }

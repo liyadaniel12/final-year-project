@@ -320,16 +320,7 @@ export default function ManagerFeedbackPage() {
               ))}
             </select>
 
-            {/* Resolved Filter */}
-            <select
-              value={filterResolved}
-              onChange={(e) => setFilterResolved(e.target.value)}
-              className="h-9 px-3 rounded-lg border border-slate-200 text-[11px] font-bold bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            >
-              <option value="all">Status: All</option>
-              <option value="unresolved">Unresolved</option>
-              <option value="resolved">Resolved</option>
-            </select>
+
 
             {/* Rating Filter */}
             <select
@@ -355,11 +346,11 @@ export default function ManagerFeedbackPage() {
             <thead className="text-[11px] text-slate-500 uppercase font-semibold bg-slate-50 border-b border-slate-100">
               <tr>
                 <th className="px-6 py-3.5 w-[200px]">Customer</th>
-                <th className="px-6 py-3.5">Feedback</th>
-                <th className="px-6 py-3.5 w-[130px]">Branch</th>
-                <th className="px-6 py-3.5 w-[90px] text-center">Rating</th>
-                <th className="px-6 py-3.5 w-[100px] text-center">Status</th>
-                <th className="px-6 py-3.5 w-[120px] text-right">Date</th>
+                <th className="px-6 py-3.5 w-[45%]">Feedback</th>
+                <th className="px-6 py-3.5 w-[150px]">Branch</th>
+                <th className="px-6 py-3.5 w-[100px] text-center">Rating</th>
+
+                <th className="px-6 py-3.5 w-[140px] text-right">Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -399,30 +390,7 @@ export default function ManagerFeedbackPage() {
                   <td className="px-6 py-4 align-top text-center">
                     {renderStars(item.rating)}
                   </td>
-                  <td className="px-6 py-4 align-top text-center">
-                    <button
-                      onClick={() => handleToggleResolve(item.id, item.isResolved)}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
-                        item.isResolved
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                          : item.isCritical
-                            ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
-                            : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-                      }`}
-                    >
-                      {item.isResolved ? (
-                        <>
-                          <CheckCircle className="w-3 h-3" />
-                          Resolved
-                        </>
-                      ) : (
-                        <>
-                          <AlertOctagon className="w-3 h-3" />
-                          {item.isCritical ? 'Resolve Now' : 'Pending'}
-                        </>
-                      )}
-                    </button>
-                  </td>
+
                   <td className="px-6 py-4 align-top text-right whitespace-nowrap">
                     <div className="text-sm font-medium text-slate-600">{item.date}</div>
                     <div className="text-[10px] text-slate-400 font-medium">{item.time}</div>
@@ -431,7 +399,7 @@ export default function ManagerFeedbackPage() {
               ))}
               {filteredFeedback.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
+                  <td colSpan={5} className="px-6 py-12 text-center">
                     <MessageSquare className="w-10 h-10 text-slate-200 mx-auto mb-3" />
                     <p className="text-slate-500 font-medium">No feedback found</p>
                     <p className="text-sm text-slate-400 mt-1">

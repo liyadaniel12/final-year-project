@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
+import nodemailer from 'nodemailer'
 
 // Default password for new users
 const DEFAULT_PASSWORD = '1234'
@@ -217,3 +218,100 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 }
+
+// --- Forgot Password OTP Flow ---
+const otpStore = new Map();
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: profile, error } = await supabaseAdmin.from('profiles').select('id').eq('email', email).single();
+
+    if (error || !profile) {
+      return res.status(404).json({ error: 'This email address does not exist' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000;
+
+    otpStore.set(email, { otp, expiresAt });
+
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Password Reset OTP - Branch Manager App',
+        text: `Your password reset code is: ${otp}. It will expire in 10 minutes.`,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(`OTP sent to ${email} via Nodemailer`);
+    } else {
+      console.log(`\n\n=== OTP FOR ${email} IS: ${otp} ===\n\n`);
+    }
+
+    res.json({ message: 'OTP sent successfully' });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const verifyOTP = async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) return res.status(400).json({ error: 'Email and code are required' });
+
+    const record = otpStore.get(email);
+    if (!record || record.otp !== code || Date.now() > record.expiresAt) {
+      return res.status(400).json({ error: 'You have entered incorrect code' });
+    }
+
+    res.json({ message: 'OTP verified successfully' });
+  } catch (err) {
+    console.error('Verify OTP error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+    if (!email || !code || !newPassword) return res.status(400).json({ error: 'Missing fields' });
+
+    const record = otpStore.get(email);
+    if (!record || record.otp !== code || Date.now() > record.expiresAt) {
+      return res.status(400).json({ error: 'You have entered incorrect code' });
+    }
+
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: profile, error: profileErr } = await supabaseAdmin.from('profiles').select('id').eq('email', email).single();
+    if (profileErr || !profile) return res.status(404).json({ error: 'User not found' });
+
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+      profile.id,
+      { password: newPassword }
+    );
+
+    if (updateError) {
+      return res.status(400).json({ error: updateError.message });
+    }
+
+    otpStore.delete(email);
+    res.json({ message: 'Your password changed. Now you can login with your new password.' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};

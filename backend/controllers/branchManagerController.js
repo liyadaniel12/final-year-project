@@ -142,6 +142,18 @@ export const addBranchStock = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
+    if (batch_number) {
+      const { data: existingBatch } = await supabase
+        .from('branch_inventory')
+        .select('id')
+        .eq('batch_number', batch_number)
+        .maybeSingle();
+        
+      if (existingBatch) {
+        return res.status(400).json({ error: 'This batch number is taken' });
+      }
+    }
+
     const shelfLifeDays = productData.shelf_life_days || 14; 
     const computedExpiryDate = new Date(Date.now() + shelfLifeDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
@@ -292,7 +304,7 @@ export const createBranchTransfer = async (req, res) => {
     const branchId = await resolveBranchId(req);
     if (!branchId) return res.status(400).json({ error: 'Branch ID required' });
 
-    let { from_branch_id, to_branch_id, product_id, batch_id, quantity } = req.body;
+    let { from_branch_id, to_branch_id, product_id, batch_id, quantity, reason, urgency } = req.body;
     
     if (!to_branch_id) to_branch_id = branchId;
     if (!from_branch_id) from_branch_id = branchId;
@@ -322,10 +334,26 @@ export const createBranchTransfer = async (req, res) => {
       product_id,
       batch_id,
       quantity,
-      status: 'Pending'
+      status: 'Pending',
+      reason: reason || null,
+      urgency: urgency || null
     }]).select();
 
-    if (error) throw error;
+    if (error) {
+       console.error("Insert with reason/urgency failed (likely missing columns), falling back to basic insert:", error);
+       const { data: fallbackData, error: fallbackError } = await supabase.from('transfers').insert([{
+         from_branch_id,
+         to_branch_id,
+         product_id,
+         batch_id,
+         quantity,
+         status: 'Pending'
+       }]).select();
+       
+       if (fallbackError) throw fallbackError;
+       return res.json({ message: 'Transfer request created successfully (without reason/urgency fields)', data: fallbackData });
+    }
+
     res.json({ message: 'Transfer request created successfully', data });
   } catch(error) {
     console.error('Create Transfer Error:', error);
@@ -385,15 +413,19 @@ export const updateBranchTransfer = async (req, res) => {
       if (updErr1) throw updErr1;
 
       // 2. Add to recipient (create new inventory row since batch implies arrival time)
-      const { data: senderBatchFull } = await supabase.from('branch_inventory').select('expiry_date').eq('id', senderBatchId).single();
+      const { data: senderBatchFull } = await supabase.from('branch_inventory').select('expiry_date, batch_number').eq('id', senderBatchId).single();
       
       const { error: updErr2 } = await supabase.from('branch_inventory').insert([{
         branch_id: transfer.to_branch_id,
         product_id: transfer.product_id,
         stock: transfer.quantity,
-        expiry_date: senderBatchFull?.expiry_date || new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000).toISOString()
+        expiry_date: senderBatchFull?.expiry_date || new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        batch_number: senderBatchFull?.batch_number ? `${senderBatchFull.batch_number}-TR-${Math.floor(Math.random()*1000)}` : null
       }]);
-      if (updErr2) throw updErr2;
+      if (updErr2) {
+        console.error('Failed recipient insert:', updErr2);
+        throw updErr2;
+      }
     }
 
     const { data, error } = await supabase.from('transfers').update({ status }).eq('id', id).select();
@@ -409,7 +441,7 @@ export const updateBranchTransfer = async (req, res) => {
 export const getTransferOptions = async (req, res) => {
   try {
     const branchId = await resolveBranchId(req);
-    const { product_id } = req.query;
+    const { product_id, mode } = req.query; // mode can be 'send' or 'request'
     
     const supabase = getSupabaseAdmin();
     
@@ -428,23 +460,47 @@ export const getTransferOptions = async (req, res) => {
        const branches = branchRes.data || [];
        
        const { data: invData } = await supabase.from('branch_inventory')
-                                               .select('branch_id, stock')
+                                               .select('branch_id, stock, expiry_date')
                                                .eq('product_id', product_id);
        
        const branchStockMap = {};
+       const now = new Date();
        (invData || []).forEach(item => {
-         if (!branchStockMap[item.branch_id]) branchStockMap[item.branch_id] = 0;
-         branchStockMap[item.branch_id] += Number(item.stock);
+         if (!branchStockMap[item.branch_id]) {
+           branchStockMap[item.branch_id] = { total_stock: 0, near_expiry: false };
+         }
+         branchStockMap[item.branch_id].total_stock += Number(item.stock);
+         
+         if (item.expiry_date) {
+           const expiryDate = new Date(item.expiry_date);
+           const daysDiff = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
+           if (daysDiff >= 0 && daysDiff <= 7) {
+              branchStockMap[item.branch_id].near_expiry = true;
+           }
+         }
        });
 
-       const recs = branches
+       let recs = branches
          .filter(b => b.id !== branchId)
          .map(b => ({
            branch_id: b.id,
            branch_name: b.name,
-           available_stock: branchStockMap[b.id] || 0
-         }))
-         .sort((a,b) => a.available_stock - b.available_stock); // Lowest stock first
+           available_stock: branchStockMap[b.id]?.total_stock || 0,
+           near_expiry: branchStockMap[b.id]?.near_expiry || false
+         }));
+
+       // Sort based on mode
+       if (mode === 'request') {
+         // Request mode: We need stock. Recommend branches with highest stock or near expiry.
+         recs.sort((a,b) => {
+           if (a.near_expiry && !b.near_expiry) return -1;
+           if (!a.near_expiry && b.near_expiry) return 1;
+           return b.available_stock - a.available_stock; // Highest stock first
+         });
+       } else {
+         // Send mode (default): We have excess stock. Recommend branches with lowest stock.
+         recs.sort((a,b) => a.available_stock - b.available_stock); // Lowest stock first
+       }
 
        result.recommendations = recs;
     }
