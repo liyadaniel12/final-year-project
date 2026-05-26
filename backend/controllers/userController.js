@@ -1,7 +1,7 @@
 import { getSupabaseAdmin } from '../lib/supabaseAdmin.js'
 
 // Default password for new users
-const DEFAULT_PASSWORD = 'TempPass123!'
+const DEFAULT_PASSWORD = '1234'
 
 const VALID_ROLES = ['main_manager', 'branch_manager', 'admin']
 
@@ -17,6 +17,9 @@ export const createUser = async (req, res) => {
     if (!email || !role) {
       return res.status(400).json({ error: 'Email and role are required' })
     }
+
+    // Note: No password strength validation here — admin can set any password.
+    // Password rules are enforced on the user login / password change flow.
 
     // Validate role
     if (!VALID_ROLES.includes(role)) {
@@ -152,6 +155,65 @@ export const updateUser = async (req, res) => {
     res.json({ message: 'User updated successfully', user: data });
   } catch (err) {
     console.error('Server error in updateUser:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+}
+
+export const deleteUser = async (req, res) => {
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+    const { id } = req.params;
+
+    // Prevent admins from deleting themselves
+    if (id === req.user.id) {
+      return res.status(400).json({ error: 'You cannot delete your own account' });
+    }
+
+    // 1. Check if user exists and get their info
+    const { data: profile, error: fetchError } = await supabaseAdmin
+      .from('profiles')
+      .select('id, role, branch_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !profile) {
+      console.error('User not found for deletion:', fetchError);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // 2. If the user is a branch_manager, clear the manager_id on their branch
+    if (profile.role === 'branch_manager' && profile.branch_id) {
+      await supabaseAdmin
+        .from('branches')
+        .update({ manager_id: null })
+        .eq('id', profile.branch_id)
+        .eq('manager_id', id);
+    }
+
+    // 3. Delete the profile row
+    const { error: profileDeleteError } = await supabaseAdmin
+      .from('profiles')
+      .delete()
+      .eq('id', id);
+
+    if (profileDeleteError) {
+      console.error('Profile deletion error:', profileDeleteError);
+      return res.status(500).json({ error: 'Failed to delete user profile' });
+    }
+
+    // 4. Delete from Supabase Auth
+    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(id);
+
+    if (authDeleteError) {
+      console.error('Auth user deletion error:', authDeleteError);
+      // Profile is already deleted, log this but still respond with partial success
+      return res.status(500).json({ error: 'Profile deleted but failed to remove auth account' });
+    }
+
+    console.log('User deleted successfully:', id);
+    res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    console.error('Server error in deleteUser:', err);
     res.status(500).json({ error: 'Server error' });
   }
 }

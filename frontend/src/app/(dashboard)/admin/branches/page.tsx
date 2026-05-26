@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { supabase } from '@/lib/supabaseClient';
-import { Edit2, MapPin, User, Package, Layers, AlertTriangle, AlertOctagon, Store, Building2 } from 'lucide-react';
+import { Edit2, MapPin, User, Store, Building2 } from 'lucide-react';
 
 interface Branch {
   id: string;
@@ -14,10 +14,6 @@ interface Branch {
   location: string;
   status: 'active' | 'inactive';
   managerName?: string;
-  totalStock?: number;
-  productTypes?: number;
-  nearExpiry?: number;
-  expired?: number;
 }
 
 export default function BranchManagementPage() {
@@ -181,37 +177,23 @@ export default function BranchManagementPage() {
                         <h3 className="text-lg font-bold text-slate-900">{branch.name}</h3>
                         {getStatusBadge(branch.status)}
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-slate-500 text-sm mt-1">
-                        <div className="flex items-center">
+                      <div className="flex items-center">
                           <MapPin className="w-4 h-4 mr-1.5 text-slate-400 shrink-0" />
                           <span className="truncate max-w-[180px]">{branch.location || 'Location not specified'}</span>
                         </div>
-                        <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-300"></div>
-                        <div className="flex items-center">
-                          <User className="w-4 h-4 mr-1.5 text-slate-400 shrink-0" />
-                          <span className="truncate max-w-[180px]"><span className="font-semibold text-slate-700">{branch.managerName || 'Unassigned'}</span></span>
-                        </div>
-                      </div>
                     </div>
                   </div>
 
-                  {/* CENTER SECTION (Stats) */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 xl:gap-6 xl:flex-1 w-full xl:w-auto mt-4 xl:mt-0 pt-4 xl:pt-0 border-t xl:border-t-0 border-slate-100">
-                    <div className="text-center md:border-r border-slate-100 md:pr-4">
-                      <p className="text-2xl font-bold text-slate-800">{branch.totalStock || 0}</p>
-                      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mt-1">Total Stock</p>
-                    </div>
-                    <div className="text-center md:border-r border-slate-100 md:pr-4">
-                      <p className="text-2xl font-bold text-slate-800">{branch.productTypes || 0}</p>
-                      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mt-1">Product Types</p>
-                    </div>
-                    <div className="text-center md:border-r border-slate-100 md:pr-4">
-                      <p className="text-2xl font-bold text-orange-600">{branch.nearExpiry || 0}</p>
-                      <p className="text-[11px] font-semibold text-orange-500 uppercase tracking-widest mt-1">Near Expiry</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-rose-600">{branch.expired || 0}</p>
-                      <p className="text-[11px] font-semibold text-rose-500 uppercase tracking-widest mt-1">Expired</p>
+                  {/* CENTER SECTION (Assigned Manager) */}
+                  <div className="flex items-center xl:flex-1 w-full xl:w-auto mt-4 xl:mt-0 pt-4 xl:pt-0 border-t xl:border-t-0 border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center border border-slate-200">
+                        <User className="w-4 h-4 text-slate-500" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Assigned Manager</p>
+                        <p className="text-sm font-bold text-slate-800 mt-0.5">{branch.managerName || <span className="text-slate-400 italic font-medium">Unassigned</span>}</p>
+                      </div>
                     </div>
                   </div>
 

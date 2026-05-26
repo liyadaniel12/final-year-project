@@ -15,7 +15,18 @@ export const getProducts = async (req, res) => {
       query = query.or('status.eq.Active,status.is.null');
     }
 
-    const { data: products, error } = await query;
+    let { data: products, error } = await query;
+
+    // If the status column doesn't exist yet, fall back to unfiltered query
+    if (error && activeOnly) {
+      console.warn('Status column may not exist, falling back to unfiltered query');
+      const fallback = await supabase
+        .from('products')
+        .select('*')
+        .order('id', { ascending: true });
+      products = fallback.data;
+      error = fallback.error;
+    }
 
     if (error) {
       console.error('Error fetching products:', error);

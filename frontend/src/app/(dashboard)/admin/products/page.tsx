@@ -118,17 +118,7 @@ export default function AdminProductsPage() {
                 <span className="text-xs text-gray-400">🔒 Fixed Shelf Life</span>
               </div>
               
-              {/* Status Dot - NO BUTTON HERE */}
-              <div className="mt-4">
-                <span className={`inline-flex items-center gap-1.5 text-sm ${
-                  product.isActive ? 'text-green-600' : 'text-red-500'
-                }`}>
-                  <span className={`w-2 h-2 rounded-full ${
-                    product.isActive ? 'bg-green-600' : 'bg-red-500'
-                  }`}></span>
-                  {product.isActive ? 'Active' : 'Inactive'}
-                </span>
-              </div>
+
             </div>
           </div>
         ))}
@@ -155,12 +145,7 @@ export default function AdminProductsPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Shelf Life
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Action
-              </th>
+
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -188,31 +173,7 @@ export default function AdminProductsPage() {
                     <span className="text-xs text-gray-400 ml-1">(FIXED)</span>
                   </span>
                 </td>
-                <td className="px-6 py-4">
-                  <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${
-                    product.isActive 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-red-100 text-red-700'
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${
-                      product.isActive ? 'bg-green-600' : 'bg-red-600'
-                    }`}></span>
-                    {product.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => handleToggle(product.id)}
-                    disabled={loading}
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                      product.isActive
-                        ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
-                        : 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-200'
-                    }`}
-                  >
-                    {product.isActive ? 'Deactivate' : 'Activate'}
-                  </button>
-                </td>
+
               </tr>
             ))}
           </tbody>

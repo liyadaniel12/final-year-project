@@ -1,5 +1,5 @@
 import express from 'express'
-import { createUser, getUsers, updateUser } from '../controllers/userController.js'
+import { createUser, getUsers, updateUser, deleteUser } from '../controllers/userController.js'
 import { authenticateAdmin, loginUser, changePassword } from '../middleware/auth.js'
 
 const router = express.Router()
@@ -12,5 +12,6 @@ router.put('/change-password', changePassword)
 router.post('/', authenticateAdmin, createUser)
 router.get('/', authenticateAdmin, getUsers)
 router.put('/:id', authenticateAdmin, updateUser)
+router.delete('/:id', authenticateAdmin, deleteUser)
 
 export default router
