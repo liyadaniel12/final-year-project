@@ -31,12 +31,24 @@ export default function LoginPage() {
     try {
       // In a real system, username might be used, but since Supabase is configured 
       // for email, we treat the 'username' field as email.
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (signInError) throw signInError;
+
+      // Check if user is required to change their default password
+      if (data.user?.user_metadata?.must_change_password) {
+        // Sign out immediately so AuthProvider doesn't route them to the dashboard
+        await supabase.auth.signOut();
+        // Set loading to true so we don't flash anything before the redirect
+        setLoading(true);
+        // We'll use window.location.href to bypass AuthProvider redirects
+        window.location.href = `/change-password?email=${encodeURIComponent(email)}`;
+        return;
+      }
+      
       // AuthProvider or middleware will redirect on success
     } catch (err: any) {
       setError(err.message || 'Invalid login credentials');

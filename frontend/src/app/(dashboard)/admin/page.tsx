@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/Card';
 import { supabase } from '@/lib/supabaseClient';
-import { Users, Building2, Package, UserCheck } from 'lucide-react';
+import { Users, Building2, Package, UserCheck, Activity, ShieldCheck, Database, LayoutDashboard } from 'lucide-react';
 
 export default function AdminOverviewPage() {
   const [stats, setStats] = useState<any>(null);
@@ -37,21 +36,29 @@ export default function AdminOverviewPage() {
   };
 
   if (loading) {
-    return <div className="p-12 text-center text-slate-500 animate-pulse font-medium">Loading system architecture...</div>;
+    return (
+      <div className="flex h-[80vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 border-4 border-[#2E7D32]/20 border-t-[#2E7D32] rounded-full animate-spin"></div>
+          <p className="text-[#2E7D32] font-semibold text-lg animate-pulse">Loading Command Center...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="p-12 text-center flex flex-col items-center justify-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-rose-100 text-rose-600 mb-4">
-          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
+      <div className="p-12 text-center flex flex-col items-center justify-center h-[80vh]">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-red-50 text-red-500 mb-6 shadow-sm border border-red-100">
+          <Database className="w-10 h-10" />
         </div>
-        <h3 className="text-xl font-bold text-slate-900 mb-2">Connection Error</h3>
-        <p className="text-slate-500 mb-6 max-w-md mx-auto">{error}</p>
-        <button onClick={fetchDashboardData} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors shadow-sm">
-          Try Again
+        <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">Connection Lost</h3>
+        <p className="text-slate-500 mb-8 max-w-md mx-auto text-lg leading-relaxed">{error}</p>
+        <button 
+          onClick={fetchDashboardData} 
+          className="px-8 py-3.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-2xl font-bold transition-all hover:scale-105 shadow-lg shadow-green-900/20 active:scale-95"
+        >
+          Re-establish Connection
         </button>
       </div>
     );
@@ -59,7 +66,6 @@ export default function AdminOverviewPage() {
 
   if (!stats) return null;
 
-  // Helper mapping
   const roleDisplayNames: Record<string, string> = {
     'admin': 'System Admins',
     'main_manager': 'Main Managers',
@@ -67,136 +73,206 @@ export default function AdminOverviewPage() {
   };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-12 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
       
-      {/* Header Profile Section */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard Overview</h1>
-          <p className="text-slate-500 mt-1 font-medium">Expiry-Aware Dairy Distribution System — Admin Panel</p>
-        </div>
+      {/* 1. HERO HEADER */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#2E7D32] via-[#246127] to-[#1B5E20] p-8 sm:p-10 rounded-[2.5rem] shadow-2xl shadow-green-900/20 mb-10 text-white border border-white/10 group">
         
-        <div className="flex items-center space-x-4 bg-slate-50 p-2 pr-6 rounded-full border border-slate-100">
-          <div className="h-12 w-12 bg-white text-indigo-600 font-bold text-lg rounded-full flex items-center justify-center border border-slate-200 shadow-sm">
-            {stats.adminProfile?.full_name ? stats.adminProfile.full_name.split(' ').map((n: string) => n[0]).join('') : 'AH'}
+        {/* Decorative Background Elements */}
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 rounded-full bg-white/10 blur-[80px] pointer-events-none group-hover:bg-white/15 transition-all duration-700"></div>
+        <div className="absolute bottom-0 right-[20%] -mb-16 w-64 h-64 rounded-full bg-[#FF9800]/20 blur-[60px] pointer-events-none group-hover:bg-[#FF9800]/30 transition-all duration-700"></div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-emerald-100 text-sm font-semibold mb-6 backdrop-blur-sm">
+              <ShieldCheck className="w-4 h-4 text-[#FF9800]" />
+              Secure Admin Session
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white mb-3 drop-shadow-sm leading-tight">
+              Command Center
+            </h1>
+            <p className="text-emerald-100/90 text-lg sm:text-xl font-medium tracking-wide">
+              Expiry-Aware Dairy Distribution System
+            </p>
           </div>
-          <div>
-            <h2 className="text-sm font-bold text-slate-900 leading-tight">
-              {stats.adminProfile?.full_name || 'System Administrator'}
-            </h2>
-            <p className="text-xs text-slate-500 font-medium tracking-wide uppercase">System Admin</p>
+          
+          <div className="flex items-center gap-5 bg-black/20 backdrop-blur-md p-3 pr-8 rounded-full border border-white/10 shadow-inner hover:bg-black/30 transition-colors">
+            <div className="h-16 w-16 bg-gradient-to-br from-[#FFF8E7] to-amber-50 text-[#2E7D32] font-black text-2xl rounded-full flex items-center justify-center shadow-md border-2 border-white/50">
+              {stats.adminProfile?.full_name ? stats.adminProfile.full_name.split(' ').map((n: string) => n[0]).join('') : 'AH'}
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white leading-tight mb-0.5">
+                {stats.adminProfile?.full_name || 'System Administrator'}
+              </h2>
+              <p className="text-sm text-[#FF9800] font-bold tracking-widest uppercase">System Admin</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* System Overview Section */}
-      <div>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          <Card className="rounded-3xl shadow-sm border-slate-100 bg-white hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
-                   <Users className="w-6 h-6" />
-                </div>
-              </div>
-              <div className="text-4xl font-extrabold text-slate-800">{stats.totalUsers}</div>
-              <p className="font-bold text-slate-700 mt-1">Total Users</p>
-              <p className="text-sm font-medium text-emerald-600 mt-1">{stats.activeUsers} active</p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-3xl shadow-sm border-slate-100 bg-white hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-sky-50 text-sky-600 rounded-2xl">
-                   <Building2 className="w-6 h-6" />
-                </div>
-              </div>
-              <div className="text-4xl font-extrabold text-slate-800">{stats.totalBranches}</div>
-              <p className="font-bold text-slate-700 mt-1">Active Branches</p>
-              <p className="text-sm font-medium text-rose-500 mt-1">{stats.inactiveBranches} inactive</p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-3xl shadow-sm border-slate-100 bg-white hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
-                   <Package className="w-6 h-6" />
-                </div>
-              </div>
-              <div className="text-4xl font-extrabold text-slate-800">{stats.totalProducts}</div>
-              <p className="font-bold text-slate-700 mt-1">Product Types</p>
-              <p className="text-sm font-medium text-slate-500 mt-1">{stats.productCategories} categories</p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-3xl shadow-sm border-slate-100 bg-white hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
-                   <UserCheck className="w-6 h-6" />
-                </div>
-              </div>
-              <div className="text-4xl font-extrabold text-slate-800">{stats.totalBranchManagers}</div>
-              <p className="font-bold text-slate-700 mt-1">Branch Managers</p>
-              <p className="text-sm font-medium text-emerald-600 mt-1">{stats.activeBranchManagers} active</p>
-            </CardContent>
-          </Card>
+      {/* 2. STATS GRID */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        
+        {/* Stat Card 1 */}
+        <div className="bg-white rounded-[2rem] p-7 shadow-sm border border-slate-100 hover:shadow-xl hover:border-slate-200 transition-all duration-300 hover:-translate-y-1.5 group relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-[100px] -z-0 opacity-50 group-hover:scale-110 transition-transform"></div>
+          <div className="relative z-10 flex justify-between items-start mb-6">
+            <div className="p-4 bg-blue-100/50 text-blue-600 rounded-2xl group-hover:bg-blue-100 group-hover:text-blue-700 transition-colors">
+               <Users className="w-7 h-7" />
+            </div>
+          </div>
+          <div className="relative z-10">
+            <div className="text-5xl font-black text-slate-800 mb-1 tracking-tight">{stats.totalUsers}</div>
+            <p className="text-base font-bold text-slate-500 uppercase tracking-wide">Total Users</p>
+            <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
+              <Activity className="w-4 h-4" />
+              {stats.activeUsers} active now
+            </div>
+          </div>
         </div>
+
+        {/* Stat Card 2 */}
+        <div className="bg-white rounded-[2rem] p-7 shadow-sm border border-slate-100 hover:shadow-xl hover:border-slate-200 transition-all duration-300 hover:-translate-y-1.5 group relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-[100px] -z-0 opacity-50 group-hover:scale-110 transition-transform"></div>
+          <div className="relative z-10 flex justify-between items-start mb-6">
+            <div className="p-4 bg-emerald-100/50 text-emerald-600 rounded-2xl group-hover:bg-emerald-100 group-hover:text-emerald-700 transition-colors">
+               <Building2 className="w-7 h-7" />
+            </div>
+          </div>
+          <div className="relative z-10">
+            <div className="text-5xl font-black text-slate-800 mb-1 tracking-tight">{stats.totalBranches}</div>
+            <p className="text-base font-bold text-slate-500 uppercase tracking-wide">Active Branches</p>
+            <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg">
+              <Activity className="w-4 h-4" />
+              {stats.inactiveBranches} inactive
+            </div>
+          </div>
+        </div>
+
+        {/* Stat Card 3 */}
+        <div className="bg-white rounded-[2rem] p-7 shadow-sm border border-slate-100 hover:shadow-xl hover:border-slate-200 transition-all duration-300 hover:-translate-y-1.5 group relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-bl-[100px] -z-0 opacity-50 group-hover:scale-110 transition-transform"></div>
+          <div className="relative z-10 flex justify-between items-start mb-6">
+            <div className="p-4 bg-amber-100/50 text-amber-600 rounded-2xl group-hover:bg-amber-100 group-hover:text-amber-700 transition-colors">
+               <Package className="w-7 h-7" />
+            </div>
+          </div>
+          <div className="relative z-10">
+            <div className="text-5xl font-black text-slate-800 mb-1 tracking-tight">{stats.totalProducts}</div>
+            <p className="text-base font-bold text-slate-500 uppercase tracking-wide">Product Types</p>
+            <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-lg">
+              <LayoutDashboard className="w-4 h-4" />
+              {stats.productCategories} categories
+            </div>
+          </div>
+        </div>
+
+        {/* Stat Card 4 */}
+        <div className="bg-white rounded-[2rem] p-7 shadow-sm border border-slate-100 hover:shadow-xl hover:border-slate-200 transition-all duration-300 hover:-translate-y-1.5 group relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#2E7D32]/5 rounded-bl-[100px] -z-0 opacity-50 group-hover:scale-110 transition-transform"></div>
+          <div className="relative z-10 flex justify-between items-start mb-6">
+            <div className="p-4 bg-[#2E7D32]/10 text-[#2E7D32] rounded-2xl group-hover:bg-[#2E7D32]/20 transition-colors">
+               <UserCheck className="w-7 h-7" />
+            </div>
+          </div>
+          <div className="relative z-10">
+            <div className="text-5xl font-black text-slate-800 mb-1 tracking-tight">{stats.totalBranchManagers}</div>
+            <p className="text-base font-bold text-slate-500 uppercase tracking-wide">Branch Managers</p>
+            <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[#2E7D32] bg-[#2E7D32]/10 px-3 py-1 rounded-lg">
+              <Activity className="w-4 h-4" />
+              {stats.activeBranchManagers} active
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
+      {/* 3. DETAILS SECTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Users by role */}
+        {/* Roles Breakdown */}
         <div className="lg:col-span-1">
-          <Card className="rounded-3xl shadow-sm border border-slate-100 bg-white h-full">
-            <CardContent className="p-6">
-               <h3 className="text-lg font-bold text-slate-900 mb-6">Users by Role</h3>
-               <ul className="space-y-4">
+          <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 h-full overflow-hidden flex flex-col">
+            <div className="p-8 border-b border-slate-100 bg-slate-50/50">
+               <h3 className="text-xl font-black text-slate-800 tracking-tight">System Roles</h3>
+               <p className="text-sm font-medium text-slate-500 mt-1">Distribution of users across the platform</p>
+            </div>
+            
+            <div className="p-8 flex-1">
+               <ul className="space-y-5">
                  {Object.keys(roleDisplayNames).map(roleKey => (
-                   <li key={roleKey} className="flex justify-between items-center text-sm p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
-                     <span className="font-bold text-slate-700">{roleDisplayNames[roleKey]}</span>
-                     <span className="font-bold text-slate-900 bg-white shadow-sm border border-slate-200 py-1.5 px-4 rounded-full">
-                       {stats.usersByRole[roleKey] || 0}
-                     </span>
+                   <li key={roleKey} className="group">
+                     <div className="flex justify-between items-center mb-3">
+                       <span className="font-bold text-slate-700 text-sm tracking-wide">{roleDisplayNames[roleKey]}</span>
+                       <span className="font-black text-slate-900 bg-slate-100 py-1 px-4 rounded-xl text-sm">
+                         {stats.usersByRole[roleKey] || 0}
+                       </span>
+                     </div>
+                     {/* Visual Progress Bar */}
+                     <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                       <div 
+                         className="h-full bg-[#2E7D32] rounded-full transition-all duration-1000 ease-out group-hover:bg-[#FF9800]"
+                         style={{ 
+                           width: `${Math.max(10, ((stats.usersByRole[roleKey] || 0) / stats.totalUsers) * 100)}%` 
+                         }}
+                       ></div>
+                     </div>
                    </li>
                  ))}
                </ul>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
-        {/* Branch Status details */}
+        {/* Branch Mapping */}
         <div className="lg:col-span-2">
-          <Card className="rounded-3xl shadow-sm border border-slate-100 bg-white h-full">
-            <CardContent className="p-6">
-               <h3 className="text-lg font-bold text-slate-900 mb-6">Branch Mapping</h3>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 h-full overflow-hidden flex flex-col">
+            <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+               <div>
+                 <h3 className="text-xl font-black text-slate-800 tracking-tight">Branch Mapping</h3>
+                 <p className="text-sm font-medium text-slate-500 mt-1">Directory of all operational branches</p>
+               </div>
+               <div className="px-4 py-2 bg-[#FFF8E7] text-[#FF9800] rounded-xl font-bold text-sm border border-orange-100">
+                 {stats.branchStatusDetails?.length || 0} Facilities
+               </div>
+            </div>
+
+            <div className="p-6 flex-1 bg-slate-50/30">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                  {stats.branchStatusDetails?.map((branch: any) => (
-                   <div key={branch.id} className="flex justify-between items-center p-5 bg-slate-50 border border-slate-100/80 rounded-2xl transition-all hover:bg-white hover:shadow-sm">
-                     <div>
-                       <h4 className="font-bold text-slate-900">{branch.name}</h4>
-                       <p className="text-xs font-medium text-slate-500 mt-1 bg-white inline-block px-2 py-0.5 rounded border border-slate-200 shadow-sm">{branch.managerName}</p>
-                     </div>
-                     <div>
-                       <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full border ${
+                   <div key={branch.id} className="flex flex-col p-6 bg-white border border-slate-100 rounded-[1.5rem] transition-all duration-300 hover:shadow-lg hover:border-slate-200 group">
+                     <div className="flex justify-between items-start mb-4">
+                       <h4 className="font-black text-lg text-slate-800 tracking-tight group-hover:text-[#2E7D32] transition-colors">{branch.name}</h4>
+                       <span className={`px-3 py-1 text-xs font-black uppercase tracking-wider rounded-lg border ${
                          branch.status === 'active' 
-                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                           : 'bg-rose-50 text-rose-700 border-rose-200'
+                           ? 'bg-[#2E7D32]/10 text-[#2E7D32] border-[#2E7D32]/20' 
+                           : 'bg-rose-50 text-rose-600 border-rose-200'
                        }`}>
                          {branch.status}
                        </span>
+                     </div>
+                     <div className="mt-auto pt-4 border-t border-slate-50 flex items-center gap-3">
+                       <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs">
+                         {branch.managerName.substring(0,2).toUpperCase()}
+                       </div>
+                       <div>
+                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Assigned Manager</p>
+                         <p className="text-sm font-bold text-slate-700">{branch.managerName}</p>
+                       </div>
                      </div>
                    </div>
                  ))}
                  
                  {stats.branchStatusDetails?.length === 0 && (
-                   <div className="text-sm font-medium text-slate-500 py-8 text-center col-span-2 bg-slate-50 rounded-2xl border border-slate-100 border-dashed">No branches mapped yet.</div>
+                   <div className="flex flex-col items-center justify-center py-12 text-center col-span-full bg-white rounded-[1.5rem] border-2 border-slate-100 border-dashed">
+                     <Building2 className="w-12 h-12 text-slate-300 mb-4" />
+                     <p className="text-lg font-bold text-slate-600">No branches mapped yet</p>
+                     <p className="text-slate-400 mt-1 font-medium">Add a branch in the system to see it here.</p>
+                   </div>
                  )}
                </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
 

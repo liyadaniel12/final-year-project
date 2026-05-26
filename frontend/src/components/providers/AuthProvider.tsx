@@ -160,7 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const publicRoutes = ['/login', '/', '/forgot-password', '/verify', '/feedback'];
+    const publicRoutes = ['/login', '/', '/forgot-password', '/reset-password', '/change-password', '/verify', '/feedback'];
     const isPublicRoute = publicRoutes.includes(pathname);
 
     // Redirect unauthenticated users away from protected routes

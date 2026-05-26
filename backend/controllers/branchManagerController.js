@@ -142,6 +142,18 @@ export const addBranchStock = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
+    if (batch_number) {
+      const { data: existingBatch } = await supabase
+        .from('branch_inventory')
+        .select('id')
+        .eq('batch_number', batch_number)
+        .maybeSingle();
+        
+      if (existingBatch) {
+        return res.status(400).json({ error: 'This batch number is taken' });
+      }
+    }
+
     const shelfLifeDays = productData.shelf_life_days || 14; 
     const computedExpiryDate = new Date(Date.now() + shelfLifeDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
