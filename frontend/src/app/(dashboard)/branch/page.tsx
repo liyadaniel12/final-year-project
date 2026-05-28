@@ -19,7 +19,7 @@ export default function BranchDashboardPage() {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !session?.access_token) return;
 
-        const response = await fetch('http://localhost:9000/api/branch-manager/dashboard', {
+        const response = await fetch('https://final-year-project-h5uk.onrender.com/api/branch-manager/dashboard', {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
 

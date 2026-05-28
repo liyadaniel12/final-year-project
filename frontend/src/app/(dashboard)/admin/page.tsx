@@ -20,7 +20,7 @@ export default function AdminOverviewPage() {
       const { data: { session } } = await supabase.auth.getSession();
       const headers = { 'Authorization': `Bearer ${session?.access_token}` };
 
-      const statsRes = await fetch('http://localhost:9000/api/system/overview', { headers });
+      const statsRes = await fetch('https://final-year-project-h5uk.onrender.com/api/system/overview', { headers });
       if (statsRes.ok) {
         setStats(await statsRes.json());
       } else {

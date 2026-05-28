@@ -42,7 +42,7 @@ export default function ResetPasswordPage() {
     setError(null);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000/api'}/users/reset-password`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://final-year-project-h5uk.onrender.com/api'}/users/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code, newPassword: password }),

@@ -22,7 +22,7 @@ export default function ManagerDashboard() {
 
         const token = session.access_token;
 
-        const response = await fetch('http://localhost:9000/api/system/manager-dashboard', {
+        const response = await fetch('https://final-year-project-h5uk.onrender.com/api/system/manager-dashboard', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

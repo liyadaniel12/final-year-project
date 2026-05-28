@@ -34,7 +34,7 @@ interface Branch {
   name: string;
 }
 
-const API_BASE = 'http://localhost:9000/api';
+const API_BASE = 'https://final-year-project-h5uk.onrender.com/api';
 
 export default function VerifyProductPage() {
   const [batchNumber, setBatchNumber] = useState('');

@@ -54,7 +54,7 @@ export default function ManagerFeedbackPage() {
 
         // Fetch branches for filter (public endpoint, no auth needed)
         try {
-          const branchRes = await fetch('http://localhost:9000/api/branches/public');
+          const branchRes = await fetch('https://final-year-project-h5uk.onrender.com/api/branches/public');
           if (branchRes.ok) {
             const branchData = await branchRes.json();
             setBranches(branchData.branches || []);
@@ -65,7 +65,7 @@ export default function ManagerFeedbackPage() {
         }
 
         // Fetch feedback
-        const response = await fetch('http://localhost:9000/api/feedback', {
+        const response = await fetch('https://final-year-project-h5uk.onrender.com/api/feedback', {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
 
@@ -86,7 +86,7 @@ export default function ManagerFeedbackPage() {
   const handleToggleResolve = async (id: string, currentStatus: boolean) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch(`http://localhost:9000/api/feedback/${id}/resolve`, {
+      const response = await fetch(`https://final-year-project-h5uk.onrender.com/api/feedback/${id}/resolve`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${session?.access_token}`,
@@ -109,7 +109,7 @@ export default function ManagerFeedbackPage() {
     setIsExporting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch('http://localhost:9000/api/feedback/export', {
+      const response = await fetch('https://final-year-project-h5uk.onrender.com/api/feedback/export', {
         headers: { 'Authorization': `Bearer ${session?.access_token}` }
       });
       const blob = await response.blob();
@@ -168,7 +168,7 @@ export default function ManagerFeedbackPage() {
 
   const fetchBatchDetails = async (batchNumber: string) => {
     try {
-      const response = await fetch(`http://localhost:9000/api/batches/lookup?batchNumber=${encodeURIComponent(batchNumber)}`);
+      const response = await fetch(`https://final-year-project-h5uk.onrender.com/api/batches/lookup?batchNumber=${encodeURIComponent(batchNumber)}`);
       const data = await response.json();
       if (data.exists) {
         setSelectedBatch(data.batch);

@@ -19,7 +19,7 @@ export default function BranchExpiryOverviewPage() {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !session?.access_token) return;
 
-        const response = await fetch('http://localhost:9000/api/branch-manager/stock', {
+        const response = await fetch('https://final-year-project-h5uk.onrender.com/api/branch-manager/stock', {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
 

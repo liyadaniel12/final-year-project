@@ -18,7 +18,7 @@ export default function RedistributionPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000'}/api/branch-manager/transfers`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://final-year-project-h5uk.onrender.com'}/api/branch-manager/transfers`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch redistribution data');

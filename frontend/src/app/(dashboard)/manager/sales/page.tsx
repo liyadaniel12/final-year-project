@@ -20,7 +20,7 @@ export default function ManagerSalesOverviewPage() {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !session?.access_token) return;
 
-        const response = await fetch('http://localhost:9000/api/manager/sales', {
+        const response = await fetch('https://final-year-project-h5uk.onrender.com/api/manager/sales', {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
 

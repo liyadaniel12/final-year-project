@@ -16,13 +16,13 @@ import { Input } from '@/components/ui/Input';
 
 const lookupBatch = async (batchNumber: string) => {
   if (!batchNumber) return null;
-  const res = await fetch(`http://localhost:9000/api/batches/lookup?batchNumber=${batchNumber}`);
+  const res = await fetch(`https://final-year-project-h5uk.onrender.com/api/batches/lookup?batchNumber=${batchNumber}`);
   if (!res.ok) throw new Error('Failed to lookup batch');
   return res.json();
 };
 
 const submitFeedback = async (data: any) => {
-  const res = await fetch('http://localhost:9000/api/feedback', {
+  const res = await fetch('https://final-year-project-h5uk.onrender.com/api/feedback', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),

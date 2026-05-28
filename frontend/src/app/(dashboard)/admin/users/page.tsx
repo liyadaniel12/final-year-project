@@ -62,7 +62,7 @@ const fetchUsers = async (): Promise<User[]> => {
   }
 
   console.log('[fetchUsers] Access token available. Making API request to /api/users...');
-  const res = await fetch('http://localhost:9000/api/users', {
+  const res = await fetch('https://final-year-project-h5uk.onrender.com/api/users', {
     headers: { 'Authorization': `Bearer ${session.access_token}` },
   });
 
@@ -125,7 +125,7 @@ export default function UserManagementPage() {
     queryKey: ['branches'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch('http://localhost:9000/api/branches', {
+      const res = await fetch('https://final-year-project-h5uk.onrender.com/api/branches', {
         headers: { 'Authorization': `Bearer ${session?.access_token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch branches');
@@ -139,7 +139,7 @@ export default function UserManagementPage() {
     mutationFn: async (payload: UserFormValues) => {
       const { data: { session } } = await supabase.auth.getSession();
       const method = payload.id ? 'PUT' : 'POST';
-      const url = payload.id ? `http://localhost:9000/api/users/${payload.id}` : 'http://localhost:9000/api/users';
+      const url = payload.id ? `https://final-year-project-h5uk.onrender.com/api/users/${payload.id}` : 'https://final-year-project-h5uk.onrender.com/api/users';
 
       const res = await fetch(url, {
         method,
@@ -164,7 +164,7 @@ export default function UserManagementPage() {
   const deleteUserMut = useMutation({
     mutationFn: async (id: string) => {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`http://localhost:9000/api/users/${id}`, {
+      const res = await fetch(`https://final-year-project-h5uk.onrender.com/api/users/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${session?.access_token}` }
       });
@@ -183,7 +183,7 @@ export default function UserManagementPage() {
   const toggleStatusMut = useMutation({
     mutationFn: async ({ id, status }: { id: string, status: string }) => {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`http://localhost:9000/api/users/${id}`, {
+      const res = await fetch(`https://final-year-project-h5uk.onrender.com/api/users/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

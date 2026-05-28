@@ -33,10 +33,10 @@ export default function GenerateReportsPage() {
         
         // Fetch all endpoints concurrently
         const [stockRes, salesRes, transfersRes, branchesRes] = await Promise.all([
-          fetch('http://localhost:9000/api/manager/stock', { headers }),
-          fetch('http://localhost:9000/api/manager/sales', { headers }),
-          fetch('http://localhost:9000/api/manager/transfers', { headers }),
-          fetch('http://localhost:9000/api/branches/public')
+          fetch('https://final-year-project-h5uk.onrender.com/api/manager/stock', { headers }),
+          fetch('https://final-year-project-h5uk.onrender.com/api/manager/sales', { headers }),
+          fetch('https://final-year-project-h5uk.onrender.com/api/manager/transfers', { headers }),
+          fetch('https://final-year-project-h5uk.onrender.com/api/branches/public')
         ]);
 
         const [stockData, salesData, transfersData, branchesData] = await Promise.all([

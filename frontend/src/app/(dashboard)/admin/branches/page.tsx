@@ -36,7 +36,7 @@ export default function BranchManagementPage() {
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch('http://localhost:9000/api/branches', {
+      const res = await fetch('https://final-year-project-h5uk.onrender.com/api/branches', {
         headers: { 'Authorization': `Bearer ${session?.access_token}` }
       });
       if (res.ok) {
@@ -58,8 +58,8 @@ export default function BranchManagementPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const url = isEditMode && editingId 
-         ? `http://localhost:9000/api/branches/${editingId}`
-         : 'http://localhost:9000/api/branches';
+         ? `https://final-year-project-h5uk.onrender.com/api/branches/${editingId}`
+         : 'https://final-year-project-h5uk.onrender.com/api/branches';
       
       const method = isEditMode ? 'PUT' : 'POST';
 

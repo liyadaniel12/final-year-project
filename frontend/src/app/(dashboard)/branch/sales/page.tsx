@@ -23,7 +23,7 @@ export default function BranchSalesPage() {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session?.access_token) return;
 
-      const response = await fetch('http://localhost:9000/api/branch-manager/stock', {
+      const response = await fetch('https://final-year-project-h5uk.onrender.com/api/branch-manager/stock', {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
 
@@ -48,7 +48,7 @@ export default function BranchSalesPage() {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session?.access_token) return;
 
-      const response = await fetch('http://localhost:9000/api/branch-manager/sales', {
+      const response = await fetch('https://final-year-project-h5uk.onrender.com/api/branch-manager/sales', {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
 
@@ -72,7 +72,7 @@ export default function BranchSalesPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("Authentication required");
 
-      const res = await fetch('http://localhost:9000/api/branch-manager/sales', {
+      const res = await fetch('https://final-year-project-h5uk.onrender.com/api/branch-manager/sales', {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${session.access_token}`,

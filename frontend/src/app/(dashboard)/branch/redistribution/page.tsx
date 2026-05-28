@@ -34,7 +34,7 @@ export default function BranchRedistributionPage() {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session?.access_token) return;
 
-      const response = await fetch('http://localhost:9000/api/branch-manager/transfers', {
+      const response = await fetch('https://final-year-project-h5uk.onrender.com/api/branch-manager/transfers', {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
 
@@ -57,7 +57,7 @@ export default function BranchRedistributionPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
-      const response = await fetch('http://localhost:9000/api/branch-manager/transfer-options', {
+      const response = await fetch('https://final-year-project-h5uk.onrender.com/api/branch-manager/transfer-options', {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
       if (response.ok) {
@@ -78,7 +78,7 @@ export default function BranchRedistributionPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
 
-      const response = await fetch(`http://localhost:9000/api/branch-manager/transfers/${id}`, {
+      const response = await fetch(`https://final-year-project-h5uk.onrender.com/api/branch-manager/transfers/${id}`, {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${session.access_token}`,
@@ -115,7 +115,7 @@ export default function BranchRedistributionPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
 
-      const response = await fetch(`http://localhost:9000/api/branch-manager/transfer-options?product_id=${productId}&mode=${mode}`, {
+      const response = await fetch(`https://final-year-project-h5uk.onrender.com/api/branch-manager/transfer-options?product_id=${productId}&mode=${mode}`, {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
       if (response.ok) {
@@ -167,7 +167,7 @@ export default function BranchRedistributionPage() {
         urgency: activeTab === 'request' ? urgency : undefined
       };
 
-      const res = await fetch('http://localhost:9000/api/branch-manager/transfers', {
+      const res = await fetch('https://final-year-project-h5uk.onrender.com/api/branch-manager/transfers', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
