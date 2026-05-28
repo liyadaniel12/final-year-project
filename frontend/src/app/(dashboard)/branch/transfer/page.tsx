@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowRightLeft, Send, Download, Loader2, CheckCircle2,
-  XCircle, AlertCircle, Truck, ArrowRight, Store, Package
+  XCircle, AlertCircle, Truck, ArrowRight, Store, Package, Clock
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -188,6 +188,24 @@ export default function BranchRedistributionPage() {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  // ─── Relative time helper ────────────────────────────────
+  const timeAgo = (dateStr: string) => {
+    if (!dateStr) return '';
+    const now = new Date();
+    const date = new Date(dateStr);
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    const weeks = Math.floor(days / 7);
+    if (weeks < 4) return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
   };
 
   // ─── Derived data ────────────────────────────────────────
@@ -456,6 +474,9 @@ export default function BranchRedistributionPage() {
                       <span className="text-amber-600 font-bold text-xs uppercase tracking-wider flex items-center gap-1">
                         <AlertCircle className="w-3.5 h-3.5" /> Pending Action
                       </span>
+                      <span className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+                        <Clock className="w-3 h-3" /> {timeAgo(t.created_at)}
+                      </span>
                     </div>
                     <h3 className="font-bold text-slate-900 text-lg mb-1">{t.product}</h3>
                     <div className="flex items-center gap-3 text-sm font-semibold text-slate-700 bg-white px-3 py-2 border border-slate-100 rounded-xl w-fit">
@@ -493,9 +514,14 @@ export default function BranchRedistributionPage() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-bold text-slate-900">{t.product}</h3>
-                    <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${getStatusStyle(t.status)}`}>
-                      {getStatusIcon(t.status)} {t.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+                        <Clock className="w-3 h-3" /> {timeAgo(t.created_at)}
+                      </span>
+                      <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${getStatusStyle(t.status)}`}>
+                        {getStatusIcon(t.status)} {t.status}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-slate-600">
                     <span>{t.from}</span>
@@ -544,9 +570,14 @@ export default function BranchRedistributionPage() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-bold text-slate-900">{t.product}</h3>
-                    <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${getStatusStyle(t.status)}`}>
-                      {getStatusIcon(t.status)} {t.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+                        <Clock className="w-3 h-3" /> {timeAgo(t.created_at)}
+                      </span>
+                      <span className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${getStatusStyle(t.status)}`}>
+                        {getStatusIcon(t.status)} {t.status}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-slate-600">
                     <Store className="w-3.5 h-3.5 text-slate-400" />

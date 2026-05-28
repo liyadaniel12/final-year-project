@@ -240,23 +240,31 @@ export const forgotPassword = async (req, res) => {
     otpStore.set(email, { otp, expiresAt });
 
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
+      try {
+        const transporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 587,
+          secure: false,
+          family: 4,
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
 
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Password Reset OTP - Branch Manager App',
-        text: `Your password reset code is: ${otp}. It will expire in 10 minutes.`,
-      };
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: email,
+          subject: 'Password Reset OTP - Branch Manager App',
+          text: `Your password reset code is: ${otp}. It will expire in 10 minutes.`,
+        };
 
-      await transporter.sendMail(mailOptions);
-      console.log(`OTP sent to ${email} via Nodemailer`);
+        await transporter.sendMail(mailOptions);
+        console.log(`OTP sent to ${email} via Nodemailer`);
+      } catch (mailErr) {
+        console.error('Email sending failed, falling back to console OTP:', mailErr.message);
+        console.log(`\n\n=== OTP FOR ${email} IS: ${otp} (email failed) ===\n\n`);
+      }
     } else {
       console.log(`\n\n=== OTP FOR ${email} IS: ${otp} ===\n\n`);
     }
