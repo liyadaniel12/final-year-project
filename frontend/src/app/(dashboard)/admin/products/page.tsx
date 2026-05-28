@@ -180,21 +180,7 @@ export default function AdminProductsPage() {
         </table>
       </div>
 
-      {/* INFO BANNER */}
-      <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-100">
-        <div className="flex items-start gap-3">
-          <span className="text-lg">ℹ️</span>
-          <div className="text-sm text-blue-800">
-            <p className="font-medium">About Product Management</p>
-            <p className="text-blue-700 mt-1">
-              • <strong>Active</strong> products appear in stock recording, sales, and redistribution forms.<br />
-              • <strong>Inactive</strong> products are hidden system-wide and cannot be used.<br />
-              • Shelf life values are <strong>fixed</strong> and cannot be changed for data integrity.<br />
-              • Fresh Milk has <strong>1 day</strong> shelf life - must be sold on production day.
-            </p>
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 } 

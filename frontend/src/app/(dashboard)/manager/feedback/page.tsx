@@ -254,17 +254,7 @@ export default function ManagerFeedbackPage() {
           </div>
         </Card>
 
-        <Card className={`rounded-2xl shadow-sm border p-5 hover:shadow-md transition-shadow ${criticalCount > 0 ? 'border-rose-200 bg-rose-50/30' : 'border-slate-100 bg-white'}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Critical</p>
-              <p className={`text-3xl font-black mt-1 ${criticalCount > 0 ? 'text-rose-600' : 'text-slate-900'}`}>{criticalCount}</p>
-            </div>
-            <div className={`p-3 rounded-xl ${criticalCount > 0 ? 'bg-rose-100 text-rose-600' : 'bg-slate-50 text-slate-400'}`}>
-              <AlertOctagon className="w-6 h-6" />
-            </div>
-          </div>
-        </Card>
+
 
         <Card className="rounded-2xl shadow-sm border border-slate-100 bg-white p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
@@ -295,18 +285,7 @@ export default function ManagerFeedbackPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Critical Filter */}
-            <button
-              onClick={() => setFilterCritical(!filterCritical)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
-                filterCritical
-                  ? 'bg-rose-50 border-rose-200 text-rose-700'
-                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-              }`}
-            >
-              <AlertOctagon className="w-3.5 h-3.5" />
-              Critical Only
-            </button>
+
 
             {/* Branch Filter */}
             <select

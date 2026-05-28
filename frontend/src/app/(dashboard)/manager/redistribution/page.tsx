@@ -11,6 +11,7 @@ export default function RedistributionPage() {
   const { user } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('All');
 
 
   const fetchRequests = async () => {
@@ -68,8 +69,16 @@ export default function RedistributionPage() {
 
       {/* Redistribution History */}
       <Card className="rounded-2xl shadow-sm border border-slate-100 bg-white overflow-hidden">
-        <div className="p-4 border-b border-slate-100 bg-slate-50">
+        <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
           <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Redistribution History</h3>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 px-3 rounded-lg border border-slate-200 text-xs font-bold bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+            <option value="All">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Accepted">Accepted</option>
+            <option value="In-transit">In-transit</option>
+            <option value="Completed">Completed</option>
+            <option value="Rejected">Rejected</option>
+          </select>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
@@ -84,7 +93,7 @@ export default function RedistributionPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {requests.map(t => (
+              {requests.filter(t => statusFilter === 'All' || t.status === statusFilter).map(t => (
                 <tr key={t.id} className="bg-white hover:bg-slate-50/50">
                   <td className="px-5 py-3 font-medium text-slate-600 bg-slate-50">{t.from}</td>
                   <td className="px-2 py-3 text-center"><ArrowRight className="w-4 h-4 text-indigo-500 inline-block" /></td>
@@ -98,7 +107,7 @@ export default function RedistributionPage() {
                   </td>
                 </tr>
               ))}
-              {requests.length === 0 && <tr><td colSpan={6} className="text-center py-4 text-slate-400">No redistribution history</td></tr>}
+              {requests.filter(t => statusFilter === 'All' || t.status === statusFilter).length === 0 && <tr><td colSpan={6} className="text-center py-4 text-slate-400">No redistribution history</td></tr>}
             </tbody>
           </table>
         </div>

@@ -95,38 +95,7 @@ export default function BranchDashboardPage() {
         </Card>
       </div>
       
-      {/* Expiry Status Overview */}
-      <Card className="rounded-2xl shadow-sm border border-slate-200 bg-white overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-amber-500" />
-          <h2 className="font-bold text-slate-800 text-sm">Expiry Status Overview</h2>
-        </div>
-        <div className="p-5 flex flex-col justify-center divide-y divide-slate-100">
-          <div className="w-full flex items-center justify-between py-3 first:pt-0 last:pb-0">
-            <div className="flex items-center gap-3">
-              <div className="w-4 h-4 rounded-full bg-emerald-500"></div>
-              <div><div className="font-bold text-slate-800">Green — Fresh <span className="text-xs text-slate-500 font-medium whitespace-nowrap">(&gt;7 days)</span></div></div>
-            </div>
-            <div className="font-bold text-lg text-emerald-600 text-right">{data?.freshCount || 0} <span className="text-sm text-emerald-600/70 font-medium">batches</span></div>
-          </div>
 
-          <div className="w-full flex items-center justify-between py-3 first:pt-0 last:pb-0">
-            <div className="flex items-center gap-3">
-              <div className="w-4 h-4 rounded-full bg-amber-400"></div>
-              <div><div className="font-bold text-slate-800">Yellow — Near-Expiry <span className="text-xs text-slate-500 font-medium whitespace-nowrap">(1–7 days)</span></div></div>
-            </div>
-            <div className="font-bold text-lg text-amber-500 text-right">{data?.nearCount || 0} <span className="text-sm text-amber-500/70 font-medium">batches</span></div>
-          </div>
-
-          <div className="w-full flex items-center justify-between py-3 first:pt-0 last:pb-0">
-            <div className="flex items-center gap-3">
-              <div className="w-4 h-4 rounded-full bg-rose-500"></div>
-              <div><div className="font-bold text-slate-800">Red — Expired</div></div>
-            </div>
-            <div className={`font-bold text-lg text-right ${data?.expiredCount > 0 ? 'text-rose-600' : 'text-slate-300'}`}>{data?.expiredCount || 0} <span className="text-sm font-medium">batches</span></div>
-          </div>
-        </div>
-      </Card>
 
       {/* Active Alerts */}
       {data?.criticalAlerts && data.criticalAlerts.length > 0 && (
@@ -145,6 +114,7 @@ export default function BranchDashboardPage() {
                   <div className="font-bold text-rose-800 text-sm mb-1 uppercase tracking-wide">{alert.type} Alert</div>
                   <p className="text-sm text-slate-700 leading-relaxed">
                     {alert.product} batch <span className="font-mono font-semibold">{alert.batch}</span> ({alert.qty}) {alert.type === 'Expired' ? 'has expired' : `expires in `} <span className="font-bold text-rose-600">{alert.days}</span>.
+                    <br/><span className="text-rose-600 font-bold mt-1 inline-block">Action required:</span> Please address this item immediately.
                   </p>
                 </div>
               </div>
