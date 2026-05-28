@@ -76,37 +76,10 @@ export default function AdminOverviewPage() {
     <div className="space-y-8 pb-12 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
       
       {/* 1. HERO HEADER */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#2E7D32] via-[#246127] to-[#1B5E20] p-8 sm:p-10 rounded-[2.5rem] shadow-2xl shadow-green-900/20 mb-10 text-white border border-white/10 group">
-        
-        {/* Decorative Background Elements */}
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 rounded-full bg-white/10 blur-[80px] pointer-events-none group-hover:bg-white/15 transition-all duration-700"></div>
-        <div className="absolute bottom-0 right-[20%] -mb-16 w-64 h-64 rounded-full bg-[#FF9800]/20 blur-[60px] pointer-events-none group-hover:bg-[#FF9800]/30 transition-all duration-700"></div>
-        
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-emerald-100 text-sm font-semibold mb-6 backdrop-blur-sm">
-              <ShieldCheck className="w-4 h-4 text-[#FF9800]" />
-              Secure Admin Session
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white mb-3 drop-shadow-sm leading-tight">
-              Command Center
-            </h1>
-            <p className="text-emerald-100/90 text-lg sm:text-xl font-medium tracking-wide">
-              Expiry-Aware Dairy Distribution System
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-5 bg-black/20 backdrop-blur-md p-3 pr-8 rounded-full border border-white/10 shadow-inner hover:bg-black/30 transition-colors">
-            <div className="h-16 w-16 bg-gradient-to-br from-[#FFF8E7] to-amber-50 text-[#2E7D32] font-black text-2xl rounded-full flex items-center justify-center shadow-md border-2 border-white/50">
-              {stats.adminProfile?.full_name ? stats.adminProfile.full_name.split(' ').map((n: string) => n[0]).join('') : 'AH'}
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white leading-tight mb-0.5">
-                {stats.adminProfile?.full_name || 'System Administrator'}
-              </h2>
-              <p className="text-sm text-[#FF9800] font-bold tracking-widest uppercase">System Admin</p>
-            </div>
-          </div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100 gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">System Overview</h1>
+          <p className="text-slate-500 mt-1">Manage users, branches and product categories across the network</p>
         </div>
       </div>
 
@@ -229,7 +202,7 @@ export default function AdminOverviewPage() {
           <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 h-full overflow-hidden flex flex-col">
             <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                <div>
-                 <h3 className="text-xl font-black text-slate-800 tracking-tight">Branch Mapping</h3>
+                 <h3 className="text-xl font-black text-slate-800 tracking-tight">Branch Status</h3>
                  <p className="text-sm font-medium text-slate-500 mt-1">Directory of all operational branches</p>
                </div>
                <div className="px-4 py-2 bg-[#FFF8E7] text-[#FF9800] rounded-xl font-bold text-sm border border-orange-100">

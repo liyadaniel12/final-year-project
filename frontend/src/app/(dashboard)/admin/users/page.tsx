@@ -369,10 +369,8 @@ export default function UserManagementPage() {
                 <th className="px-4 py-4 cursor-pointer hover:text-slate-800 transition-colors" onClick={() => toggleSort('role')}>
                   <div className="flex items-center gap-1">Role <ArrowUpDown className="w-3 h-3" /></div>
                 </th>
-                <th className="px-4 py-4">Branch</th>
-                <th className="px-4 py-4 cursor-pointer hover:text-slate-800 transition-colors" onClick={() => toggleSort('last_login')}>
-                  <div className="flex items-center gap-1">Last Login <ArrowUpDown className="w-3 h-3" /></div>
-                </th>
+
+
                 <th className="px-4 py-4">Status</th>
                 <th className="pr-6 pl-4 py-4 text-right">Actions</th>
               </tr>
@@ -384,15 +382,15 @@ export default function UserManagementPage() {
                     <td className="pl-6 pr-3 py-4"><div className="w-4 h-4 bg-slate-200 rounded"></div></td>
                     <td className="px-4 py-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-slate-200" /><div className="space-y-2"><div className="w-24 h-4 bg-slate-200 rounded" /><div className="w-32 h-3 bg-slate-100 rounded" /></div></div></td>
                     <td className="px-4 py-4"><div className="w-20 h-6 bg-slate-200 rounded-full" /></td>
-                    <td className="px-4 py-4"><div className="w-24 h-4 bg-slate-200 rounded" /></td>
-                    <td className="px-4 py-4"><div className="w-24 h-4 bg-slate-200 rounded" /></td>
+
+
                     <td className="px-4 py-4"><div className="w-12 h-6 bg-slate-200 rounded-full" /></td>
                     <td className="pr-6 pl-4 py-4 text-right"><div className="w-8 h-8 bg-slate-200 rounded-lg ml-auto" /></td>
                   </tr>
                 ))
               ) : isError ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={5} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-rose-500">
                       <Shield className="w-10 h-10 text-rose-300 mb-3" />
                       <p className="text-lg font-medium text-rose-900">Failed to load users</p>
@@ -403,7 +401,7 @@ export default function UserManagementPage() {
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={5} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-slate-500">
                       <Search className="w-10 h-10 text-slate-300 mb-3" />
                       <p className="text-lg font-medium text-slate-900">No users found</p>
@@ -434,25 +432,8 @@ export default function UserManagementPage() {
                         {u.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-slate-600">
-                      {u.role === 'branch_manager' ? (
-                        <div className="flex items-center gap-1.5" title={u.branch_id}>
-                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{u.branch_name || u.branch_id || 'Unknown Branch'}</span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-400 text-xs italic">HQ</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-slate-600">
-                      {u.last_login ? (
-                        <div className="flex flex-col" title={formatDistanceToNow(new Date(u.last_login), { addSuffix: true })}>
-                          <span>{format(new Date(u.last_login), 'MMM dd, hh:mm a')}</span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-400">Never</span>
-                      )}
-                    </td>
+
+
                     <td className="px-4 py-4">
                       <button
                         onClick={() => toggleStatusMut.mutate({ id: u.id, status: u.status === 'active' ? 'inactive' : 'active' })}

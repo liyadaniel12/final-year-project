@@ -20,6 +20,7 @@ export default function GenerateReportsPage() {
   const [loading, setLoading] = useState(true);
   
   const [branchFilter, setBranchFilter] = useState('All Branches');
+  const [productFilter, setProductFilter] = useState('All Products');
   const [activeReport, setActiveReport] = useState('stock');
   
   useEffect(() => {
@@ -62,17 +63,30 @@ export default function GenerateReportsPage() {
   }, []);
 
   const getFilteredData = (reportType: string) => {
+    let filtered: any[] = [];
     switch(reportType) {
       case 'sales':
-        return dataPayloads.sales.filter((item: any) => branchFilter === 'All Branches' || item.branch === branchFilter);
+        filtered = dataPayloads.sales.filter((item: any) => branchFilter === 'All Branches' || item.branch === branchFilter);
+        break;
       case 'expiry':
       case 'stock':
-        return dataPayloads.stock.filter((item: any) => branchFilter === 'All Branches' || item.branch === branchFilter);
+        filtered = dataPayloads.stock.filter((item: any) => branchFilter === 'All Branches' || item.branch === branchFilter);
+        break;
       case 'transfer':
-        return dataPayloads.transfers.filter((item: any) => branchFilter === 'All Branches' || item.from === branchFilter || item.to === branchFilter);
+        filtered = dataPayloads.transfers.filter((item: any) => 
+          item.status === 'Completed' && 
+          (branchFilter === 'All Branches' || item.from === branchFilter || item.to === branchFilter)
+        );
+        break;
       default:
-        return [];
+        filtered = [];
     }
+
+    if (productFilter !== 'All Products') {
+      filtered = filtered.filter((item: any) => item.product?.toLowerCase().includes(productFilter.toLowerCase()));
+    }
+
+    return filtered;
   };
 
   const handleDownloadExcel = () => {
@@ -85,52 +99,79 @@ export default function GenerateReportsPage() {
       return;
     }
 
+    const formatProduct = (p: string) => {
+      if (!p) return p;
+      const lower = p.toLowerCase();
+      if (lower.includes('cheese') || lower.includes('yogurt')) {
+        return `${p} (0.5 kg)`;
+      }
+      return p;
+    };
+
+    let totalQty = 0;
+
     switch(activeReport) {
       case 'sales': {
-        dataToExport = filtered.map((item: any) => ({
-          'Date & Time': item.date,
-          'Branch': item.branch,
-          'Product': item.product,
-          'Batch': item.batch,
-          'Qty Sold': item.sold,
-          'Recorded By': item.recordedBy
-        }));
+        dataToExport = filtered.map((item: any) => {
+          totalQty += Number(item.sold || 0);
+          return {
+            'Date & Time': item.date,
+            'Branch': item.branch,
+            'Product': formatProduct(item.product),
+            'Batch': item.batch,
+            'Qty Sold': item.sold,
+            'Recorded By': item.recordedBy
+          };
+        });
+        dataToExport.push({ 'Date & Time': 'TOTAL', 'Branch': '', 'Product': '', 'Batch': '', 'Qty Sold': totalQty, 'Recorded By': '' });
         fileName = 'Sales_Report';
         break;
       }
       case 'expiry': {
-        dataToExport = filtered.map((item: any) => ({
-          'Branch': item.branch,
-          'Product': item.product,
-          'Batch': item.batch,
-          'Quantity': item.qty,
-          'Expiry Date': new Date(item.expiry).toLocaleDateString(),
-          'Status': item.status
-        }));
+        dataToExport = filtered.map((item: any) => {
+          totalQty += Number(item.qty || 0);
+          return {
+            'Branch': item.branch,
+            'Product': formatProduct(item.product),
+            'Batch': item.batch,
+            'Quantity': item.qty,
+            'Expiry Date': new Date(item.expiry).toLocaleDateString(),
+            'Status': item.status
+          };
+        });
+        dataToExport.push({ 'Branch': 'TOTAL', 'Product': '', 'Batch': '', 'Quantity': totalQty, 'Expiry Date': '', 'Status': '' });
         fileName = 'Expiry_Report';
         break;
       }
       case 'transfer': {
-        dataToExport = filtered.map((item: any) => ({
-          'From Branch': item.from,
-          'To Branch': item.to,
-          'Product': item.product,
-          'Quantity': item.qty,
-          'Status': item.status
-        }));
+        dataToExport = filtered.map((item: any) => {
+          totalQty += Number(item.qty || 0);
+          return {
+            'From Branch': item.from,
+            'To Branch': item.to,
+            'Product': formatProduct(item.product),
+            'Quantity': item.qty,
+            'Status': item.status
+          };
+        });
+        dataToExport.push({ 'From Branch': 'TOTAL', 'To Branch': '', 'Product': '', 'Quantity': totalQty, 'Status': '' });
         fileName = 'Transfer_Report';
         break;
       }
       case 'stock':
       default: {
-        dataToExport = filtered.map((item: any) => ({
-          'Batch': item.batch,
-          'Product': item.product,
-          'Branch': item.branch,
-          'Quantity': item.qty,
-          'Expiry Date': new Date(item.expiry).toLocaleDateString(),
-          'Status': item.status
-        }));
+        dataToExport = filtered.map((item: any) => {
+          totalQty += Number(item.qty || 0);
+          return {
+            'Batch': item.batch,
+            'Product': formatProduct(item.product),
+            'Branch': item.branch,
+            'Quantity': item.qty,
+            'Expiry Date': new Date(item.expiry).toLocaleDateString(),
+            'Status': item.status
+          };
+        });
+        dataToExport.push({ 'Batch': 'TOTAL', 'Product': '', 'Branch': '', 'Quantity': totalQty, 'Expiry Date': '', 'Status': '' });
         fileName = 'Stock_Report';
         break;
       }
@@ -300,7 +341,7 @@ export default function GenerateReportsPage() {
             <FileText className="w-5 h-5 text-indigo-500" /> Report Options
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Branch</label>
               <select value={branchFilter} onChange={e => setBranchFilter(e.target.value)} className="w-full h-11 px-3 rounded-xl border border-slate-200 text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-700 font-medium">
@@ -308,6 +349,16 @@ export default function GenerateReportsPage() {
                 {branches.map(b => (
                   <option key={b.id} value={b.name}>{b.name} {b.location ? `- ${b.location}` : ''}</option>
                 ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Product Type</label>
+              <select value={productFilter} onChange={e => setProductFilter(e.target.value)} className="w-full h-11 px-3 rounded-xl border border-slate-200 text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-700 font-medium">
+                <option value="All Products">All Products</option>
+                <option value="Milk">Milk</option>
+                <option value="Yogurt">Yogurt</option>
+                <option value="Cheese">Cheese</option>
+                <option value="Butter">Butter</option>
               </select>
             </div>
             <div className="space-y-1.5">
